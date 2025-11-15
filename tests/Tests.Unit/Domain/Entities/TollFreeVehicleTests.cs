@@ -1,0 +1,68 @@
+using Domain.Entities;
+using Domain.Enums;
+using Domain.ValueObjects;
+using FluentAssertions;
+
+namespace Tests.Unit.Domain.Entities;
+
+public class TollFreeVehicleTests
+{
+    [Fact]
+    public void Create_WithValidVehicleType_CreatesTollFreeVehicle()
+    {
+        // Arrange & Act
+        var tollFreeVehicle = TollFreeVehicle.Create(Guid.NewGuid(), VehicleType.Motorbike);
+
+        // Assert
+        tollFreeVehicle.VehicleType.Should().Be(VehicleType.Motorbike);
+        tollFreeVehicle.Id.Should().NotBeEmpty();
+    }
+
+    [Fact]
+    public void Matches_MatchingVehicleType_ReturnsTrue()
+    {
+        // Arrange
+        var tollFreeVehicle = TollFreeVehicle.Create(Guid.NewGuid(), VehicleType.Motorbike);
+        var vehicle = new Vehicle("ABC123", VehicleType.Motorbike);
+
+        // Act
+        var result = tollFreeVehicle.Matches(vehicle);
+
+        // Assert
+        result.Should().BeTrue();
+    }
+
+    [Fact]
+    public void Matches_NonMatchingVehicleType_ReturnsFalse()
+    {
+        // Arrange
+        var tollFreeVehicle = TollFreeVehicle.Create(Guid.NewGuid(), VehicleType.Motorbike);
+        var vehicle = new Vehicle("ABC123", VehicleType.Car);
+
+        // Act
+        var result = tollFreeVehicle.Matches(vehicle);
+
+        // Assert
+        result.Should().BeFalse();
+    }
+
+    [Theory]
+    [InlineData(VehicleType.Motorbike)]
+    [InlineData(VehicleType.Bus)]
+    [InlineData(VehicleType.Emergency)]
+    [InlineData(VehicleType.Diplomat)]
+    [InlineData(VehicleType.Military)]
+    [InlineData(VehicleType.Foreign)]
+    public void Matches_AllExemptVehicleTypes_ReturnsTrue(VehicleType type)
+    {
+        // Arrange
+        var tollFreeVehicle = TollFreeVehicle.Create(Guid.NewGuid(), type);
+        var vehicle = new Vehicle("ABC123", type);
+
+        // Act
+        var result = tollFreeVehicle.Matches(vehicle);
+
+        // Assert
+        result.Should().BeTrue();
+    }
+}
