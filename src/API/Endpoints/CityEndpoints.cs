@@ -1,5 +1,6 @@
 using API.ViewModels;
 using Application.Commands.CreateCity;
+using Application.Commands.UpdateCity;
 using Application.Queries.GetAllCities;
 using Application.Queries.GetCityTaxRules;
 using MediatR;
@@ -24,6 +25,12 @@ public static class CityEndpoints
             .WithName("CreateCity")
             .WithSummary("Create a new city")
             .WithDescription("Creates a new city with the specified name");
+
+        group
+            .MapPut("/{cityId:guid}", UpdateCity)
+            .WithName("UpdateCity")
+            .WithSummary("Update an existing city")
+            .WithDescription("Updates the name of an existing city");
 
         group
             .MapGet("/{cityId:guid}/rules", GetCityTaxRules)
@@ -61,6 +68,19 @@ public static class CityEndpoints
         var result = await sender.Send(command, cancellationToken);
 
         return Results.Created($"/api/cities/{result.Id}", result);
+    }
+
+    private static async Task<IResult> UpdateCity(
+        [FromRoute] Guid cityId,
+        [FromBody] UpdateCityRequest request,
+        [FromServices] ISender sender,
+        CancellationToken cancellationToken
+    )
+    {
+        var command = new UpdateCityCommand(cityId, request.Name);
+        var result = await sender.Send(command, cancellationToken);
+
+        return Results.Ok(result);
     }
 
     private static async Task<IResult> GetCityTaxRules(

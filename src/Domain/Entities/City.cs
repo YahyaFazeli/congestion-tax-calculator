@@ -8,11 +8,9 @@ public sealed class City : Entity
 
     public string Name { get; private set; } = string.Empty;
 
-    
     private readonly List<TaxRule> _taxRules = [];
     public IReadOnlyCollection<TaxRule> TaxRules => _taxRules;
 
-    
     private City() { }
 
     public City(Guid id, string name)
@@ -34,6 +32,11 @@ public sealed class City : Entity
     public TaxRule? GetRuleForYear(int year)
     {
         return _taxRules.FirstOrDefault(r => r.Year == year);
+    }
+
+    public void UpdateName(string name)
+    {
+        Name = name;
     }
 
     public override string ToString() => Name;
