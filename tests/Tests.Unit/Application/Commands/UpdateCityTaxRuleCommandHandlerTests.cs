@@ -1,0 +1,246 @@
+using Application.Commands.UpdateCityTaxRule;
+using Domain.Entities;
+using Domain.Enums;
+using Domain.Interfaces;
+using FluentAssertions;
+using Moq;
+
+namespace Tests.Unit.Application.Commands;
+
+public class UpdateCityTaxRuleCommandHandlerTests
+{
+    private readonly Mock<ITaxRuleRepository> _mockRepository;
+    private readonly UpdateCityTaxRuleCommandHandler _handler;
+
+    public UpdateCityTaxRuleCommandHandlerTests()
+    {
+        _mockRepository = new Mock<ITaxRuleRepository>();
+        _handler = new UpdateCityTaxRuleCommandHandler(_mockRepository.Object);
+    }
+
+    [Fact]
+    public async Task Handle_ValidCommand_UpdatesTaxRule()
+    {
+        // Arrange
+        var cityId = Guid.NewGuid();
+        var ruleId = Guid.NewGuid();
+        var year = 2024;
+        var existingRule = TaxRule.Create(cityId, year, new(60), 60, [], [], [], [], []);
+
+        _mockRepository
+            .Setup(r => r.GetByIdWithAllRelationsAsync(ruleId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(existingRule);
+
+        var command = new UpdateCityTaxRuleCommand(
+            cityId,
+            ruleId,
+            year,
+            80m,
+            60,
+            new[] { new TollIntervalDto("06:00", "06:29", 10m) },
+            new[] { new TollFreeDateDto("2024-01-01", false) },
+            new[] { Month.July },
+            new[] { DayOfWeek.Saturday },
+            new[] { VehicleType.Motorbike }
+        );
+
+        // Act
+        var result = await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        result.CityId.Should().Be(cityId);
+        result.Year.Should().Be(year);
+        result.RuleId.Should().NotBeEmpty();
+        _mockRepository.Verify(
+            r => r.ReplaceRuleAsync(ruleId, It.IsAny<TaxRule>(), It.IsAny<CancellationToken>()),
+            Times.Once
+        );
+    }
+
+    [Fact]
+    public async Task Handle_RuleNotFound_ThrowsInvalidOperationException()
+    {
+        // Arrange
+        var ruleId = Guid.NewGuid();
+        _mockRepository
+            .Setup(r => r.GetByIdWithAllRelationsAsync(ruleId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((TaxRule?)null);
+
+        var command = new UpdateCityTaxRuleCommand(
+            Guid.NewGuid(),
+            ruleId,
+            2024,
+            60m,
+            60,
+            Array.Empty<TollIntervalDto>(),
+            Array.Empty<TollFreeDateDto>(),
+            Array.Empty<Month>(),
+            Array.Empty<DayOfWeek>(),
+            Array.Empty<VehicleType>()
+        );
+
+        // Act
+        Func<Task> act = async () => await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        await act.Should()
+            .ThrowAsync<InvalidOperationException>()
+            .WithMessage($"Tax rule with ID '{ruleId}' not found");
+    }
+
+    [Fact]
+    public async Task Handle_WrongCityId_ThrowsInvalidOperationException()
+    {
+        // Arrange
+        var cityId = Guid.NewGuid();
+        var wrongCityId = Guid.NewGuid();
+        var ruleId = Guid.NewGuid();
+        var existingRule = TaxRule.Create(cityId, 2024, new(60), 60, [], [], [], [], []);
+
+        _mockRepository
+            .Setup(r => r.GetByIdWithAllRelationsAsync(ruleId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(existingRule);
+
+        var command = new UpdateCityTaxRuleCommand(
+            wrongCityId,
+            ruleId,
+            2024,
+            60m,
+            60,
+            Array.Empty<TollIntervalDto>(),
+            Array.Empty<TollFreeDateDto>(),
+            Array.Empty<Month>(),
+            Array.Empty<DayOfWeek>(),
+            Array.Empty<VehicleType>()
+        );
+
+        // Act
+        Func<Task> act = async () => await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        await act.Should()
+            .ThrowAsync<InvalidOperationException>()
+            .WithMessage($"Tax rule '{ruleId}' does not belong to city '{wrongCityId}'");
+    }
+
+    [Fact]
+    public async Task Handle_ChangingYearToDuplicateYear_ThrowsInvalidOperationException()
+    {
+        // Arrange
+        var cityId = Guid.NewGuid();
+        var ruleId = Guid.NewGuid();
+        var existingRule = TaxRule.Create(cityId, 2024, new(60), 60, [], [], [], [], []);
+        var duplicateRule = TaxRule.Create(cityId, 2025, new(60), 60, [], [], [], [], []);
+
+        _mockRepository
+            .Setup(r => r.GetByIdWithAllRelationsAsync(ruleId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(existingRule);
+
+        _mockRepository
+            .Setup(r => r.GetByCityAndYearAsync(cityId, 2025, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(duplicateRule);
+
+        var command = new UpdateCityTaxRuleCommand(
+            cityId,
+            ruleId,
+            2025,
+            60m,
+            60,
+            Array.Empty<TollIntervalDto>(),
+            Array.Empty<TollFreeDateDto>(),
+            Array.Empty<Month>(),
+            Array.Empty<DayOfWeek>(),
+            Array.Empty<VehicleType>()
+        );
+
+        // Act
+        Func<Task> act = async () => await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        await act.Should()
+            .ThrowAsync<InvalidOperationException>()
+            .WithMessage("Another tax rule for year 2025 already exists for this city");
+    }
+
+    [Fact]
+    public async Task Handle_SameYear_DoesNotCheckForDuplicates()
+    {
+        // Arrange
+        var cityId = Guid.NewGuid();
+        var ruleId = Guid.NewGuid();
+        var year = 2024;
+        var existingRule = TaxRule.Create(cityId, year, new(60), 60, [], [], [], [], []);
+
+        _mockRepository
+            .Setup(r => r.GetByIdWithAllRelationsAsync(ruleId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(existingRule);
+
+        var command = new UpdateCityTaxRuleCommand(
+            cityId,
+            ruleId,
+            year,
+            80m,
+            60,
+            Array.Empty<TollIntervalDto>(),
+            Array.Empty<TollFreeDateDto>(),
+            Array.Empty<Month>(),
+            Array.Empty<DayOfWeek>(),
+            Array.Empty<VehicleType>()
+        );
+
+        // Act
+        var result = await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        result.Should().NotBeNull();
+        _mockRepository.Verify(
+            r =>
+                r.GetByCityAndYearAsync(
+                    It.IsAny<Guid>(),
+                    It.IsAny<int>(),
+                    It.IsAny<CancellationToken>()
+                ),
+            Times.Never
+        );
+    }
+
+    [Fact]
+    public async Task Handle_CancellationToken_PassedToRepository()
+    {
+        // Arrange
+        var cityId = Guid.NewGuid();
+        var ruleId = Guid.NewGuid();
+        var existingRule = TaxRule.Create(cityId, 2024, new(60), 60, [], [], [], [], []);
+        var cancellationToken = new CancellationToken();
+
+        _mockRepository
+            .Setup(r => r.GetByIdWithAllRelationsAsync(ruleId, cancellationToken))
+            .ReturnsAsync(existingRule);
+
+        var command = new UpdateCityTaxRuleCommand(
+            cityId,
+            ruleId,
+            2024,
+            60m,
+            60,
+            Array.Empty<TollIntervalDto>(),
+            Array.Empty<TollFreeDateDto>(),
+            Array.Empty<Month>(),
+            Array.Empty<DayOfWeek>(),
+            Array.Empty<VehicleType>()
+        );
+
+        // Act
+        await _handler.Handle(command, cancellationToken);
+
+        // Assert
+        _mockRepository.Verify(
+            r => r.GetByIdWithAllRelationsAsync(ruleId, cancellationToken),
+            Times.Once
+        );
+        _mockRepository.Verify(
+            r => r.ReplaceRuleAsync(ruleId, It.IsAny<TaxRule>(), cancellationToken),
+            Times.Once
+        );
+    }
+}

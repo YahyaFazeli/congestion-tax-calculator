@@ -1,0 +1,196 @@
+using Application.Commands.AddCityTaxRule;
+using Domain.Entities;
+using Domain.Enums;
+using Domain.Interfaces;
+using FluentAssertions;
+using Moq;
+
+namespace Tests.Unit.Application.Commands;
+
+public class AddCityTaxRuleCommandHandlerTests
+{
+    private readonly Mock<ICityRepository> _mockRepository;
+    private readonly AddCityTaxRuleCommandHandler _handler;
+
+    public AddCityTaxRuleCommandHandlerTests()
+    {
+        _mockRepository = new Mock<ICityRepository>();
+        _handler = new AddCityTaxRuleCommandHandler(_mockRepository.Object);
+    }
+
+    [Fact]
+    public async Task Handle_ValidCommand_AddsTaxRule()
+    {
+        // Arrange
+        var cityId = Guid.NewGuid();
+        var year = 2024;
+        var city = new City(cityId, "Stockholm");
+
+        _mockRepository
+            .Setup(r => r.GetByIdWithRulesAsync(cityId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(city);
+
+        var command = new AddCityTaxRuleCommand(
+            cityId,
+            year,
+            60m,
+            60,
+            new[] { new TollIntervalDto("06:00", "06:29", 8m) },
+            new[] { new TollFreeDateDto("2024-01-01", false) },
+            new[] { Month.July },
+            new[] { DayOfWeek.Saturday, DayOfWeek.Sunday },
+            new[] { VehicleType.Motorbike }
+        );
+
+        // Act
+        var result = await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        result.CityId.Should().Be(cityId);
+        result.Year.Should().Be(year);
+        result.RuleId.Should().NotBeEmpty();
+        _mockRepository.Verify(
+            r => r.AddTaxRuleAsync(It.IsAny<TaxRule>(), It.IsAny<CancellationToken>()),
+            Times.Once
+        );
+    }
+
+    [Fact]
+    public async Task Handle_CityNotFound_ThrowsInvalidOperationException()
+    {
+        // Arrange
+        var cityId = Guid.NewGuid();
+        _mockRepository
+            .Setup(r => r.GetByIdWithRulesAsync(cityId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((City?)null);
+
+        var command = new AddCityTaxRuleCommand(
+            cityId,
+            2024,
+            60m,
+            60,
+            Array.Empty<TollIntervalDto>(),
+            Array.Empty<TollFreeDateDto>(),
+            Array.Empty<Month>(),
+            Array.Empty<DayOfWeek>(),
+            Array.Empty<VehicleType>()
+        );
+
+        // Act
+        Func<Task> act = async () => await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        await act.Should()
+            .ThrowAsync<InvalidOperationException>()
+            .WithMessage($"City with ID '{cityId}' not found");
+    }
+
+    [Fact]
+    public async Task Handle_DuplicateYear_ThrowsInvalidOperationException()
+    {
+        // Arrange
+        var cityId = Guid.NewGuid();
+        var year = 2024;
+        var city = new City(cityId, "Stockholm");
+        var existingRule = TaxRule.Create(cityId, year, new(60), 60, [], [], [], [], []);
+        city.AddRule(existingRule);
+
+        _mockRepository
+            .Setup(r => r.GetByIdWithRulesAsync(cityId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(city);
+
+        var command = new AddCityTaxRuleCommand(
+            cityId,
+            year,
+            60m,
+            60,
+            Array.Empty<TollIntervalDto>(),
+            Array.Empty<TollFreeDateDto>(),
+            Array.Empty<Month>(),
+            Array.Empty<DayOfWeek>(),
+            Array.Empty<VehicleType>()
+        );
+
+        // Act
+        Func<Task> act = async () => await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        await act.Should()
+            .ThrowAsync<InvalidOperationException>()
+            .WithMessage($"Tax rule for year {year} already exists for city 'Stockholm'");
+    }
+
+    [Fact]
+    public async Task Handle_WithMultipleIntervals_CreatesRuleSuccessfully()
+    {
+        // Arrange
+        var cityId = Guid.NewGuid();
+        var city = new City(cityId, "Stockholm");
+
+        _mockRepository
+            .Setup(r => r.GetByIdWithRulesAsync(cityId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(city);
+
+        var command = new AddCityTaxRuleCommand(
+            cityId,
+            2024,
+            60m,
+            60,
+            new[]
+            {
+                new TollIntervalDto("06:00", "06:29", 8m),
+                new TollIntervalDto("06:30", "06:59", 13m),
+                new TollIntervalDto("07:00", "07:59", 18m),
+            },
+            Array.Empty<TollFreeDateDto>(),
+            Array.Empty<Month>(),
+            Array.Empty<DayOfWeek>(),
+            Array.Empty<VehicleType>()
+        );
+
+        // Act
+        var result = await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        result.Should().NotBeNull();
+        _mockRepository.Verify(
+            r => r.AddTaxRuleAsync(It.IsAny<TaxRule>(), It.IsAny<CancellationToken>()),
+            Times.Once
+        );
+    }
+
+    [Fact]
+    public async Task Handle_CancellationToken_PassedToRepository()
+    {
+        // Arrange
+        var cityId = Guid.NewGuid();
+        var city = new City(cityId, "Stockholm");
+        var cancellationToken = new CancellationToken();
+
+        _mockRepository
+            .Setup(r => r.GetByIdWithRulesAsync(cityId, cancellationToken))
+            .ReturnsAsync(city);
+
+        var command = new AddCityTaxRuleCommand(
+            cityId,
+            2024,
+            60m,
+            60,
+            Array.Empty<TollIntervalDto>(),
+            Array.Empty<TollFreeDateDto>(),
+            Array.Empty<Month>(),
+            Array.Empty<DayOfWeek>(),
+            Array.Empty<VehicleType>()
+        );
+
+        // Act
+        await _handler.Handle(command, cancellationToken);
+
+        // Assert
+        _mockRepository.Verify(r => r.GetByIdWithRulesAsync(cityId, cancellationToken), Times.Once);
+        _mockRepository.Verify(
+            r => r.AddTaxRuleAsync(It.IsAny<TaxRule>(), cancellationToken),
+            Times.Once
+        );
+    }
+}
