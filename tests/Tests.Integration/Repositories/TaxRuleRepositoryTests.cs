@@ -238,6 +238,94 @@ public class TaxRuleRepositoryTests : IDisposable
         result.Should().BeFalse();
     }
 
+    [Fact]
+    public async Task ReplaceRuleAsync_ExistingRule_ReplacesWithNewRule()
+    {
+        // Arrange
+        await using var context = _fixture.CreateContext();
+        var cityRepository = new CityRepository(context);
+        var taxRuleRepository = new TaxRuleRepository(context);
+
+        var city = TestDataBuilder.CreateCityWithRules("Gothenburg", 2013);
+        await cityRepository.AddAsync(city);
+        var oldRuleId = city.TaxRules.First().Id;
+
+        var newRule = TestDataBuilder.CreateTestRule(city.Id, 2014);
+
+        // Act
+        await taxRuleRepository.ReplaceRuleAsync(oldRuleId, newRule);
+
+        // Assert
+        context.ChangeTracker.Clear();
+        var oldRuleExists = await taxRuleRepository.ExistsAsync(oldRuleId);
+        oldRuleExists.Should().BeFalse();
+
+        var newRuleExists = await taxRuleRepository.ExistsAsync(newRule.Id);
+        newRuleExists.Should().BeTrue();
+
+        var retrieved = await taxRuleRepository.GetByIdWithAllRelationsAsync(newRule.Id);
+        retrieved.Should().NotBeNull();
+        retrieved!.Year.Should().Be(2014);
+    }
+
+    [Fact]
+    public async Task ReplaceRuleAsync_NonExistingOldRule_AddsNewRule()
+    {
+        // Arrange
+        await using var context = _fixture.CreateContext();
+        var cityRepository = new CityRepository(context);
+        var taxRuleRepository = new TaxRuleRepository(context);
+
+        var city = TestDataBuilder.CreateTestCity("Gothenburg");
+        await cityRepository.AddAsync(city);
+
+        var newRule = TestDataBuilder.CreateTestRule(city.Id, 2024);
+        var nonExistingRuleId = Guid.NewGuid();
+
+        // Act
+        await taxRuleRepository.ReplaceRuleAsync(nonExistingRuleId, newRule);
+
+        // Assert
+        context.ChangeTracker.Clear();
+        var retrieved = await taxRuleRepository.GetByIdWithAllRelationsAsync(newRule.Id);
+        retrieved.Should().NotBeNull();
+        retrieved!.Year.Should().Be(2024);
+    }
+
+    [Fact]
+    public async Task ReplaceRuleAsync_RemovesOldRuleRelations()
+    {
+        // Arrange
+        await using var context = _fixture.CreateContext();
+        var cityRepository = new CityRepository(context);
+        var taxRuleRepository = new TaxRuleRepository(context);
+
+        var city = TestDataBuilder.CreateCityWithRules("Gothenburg", 2013);
+        await cityRepository.AddAsync(city);
+        var oldRuleId = city.TaxRules.First().Id;
+
+        var oldRule = await taxRuleRepository.GetByIdWithAllRelationsAsync(oldRuleId);
+        var oldIntervalCount = oldRule!.Intervals.Count();
+
+        var newRule = TestDataBuilder.CreateTestRule(city.Id, 2014);
+
+        // Act
+        await taxRuleRepository.ReplaceRuleAsync(oldRuleId, newRule);
+
+        // Assert
+        context.ChangeTracker.Clear();
+
+        // Verify old rule and its relations are removed
+        var oldRuleCheck = await taxRuleRepository.GetByIdWithAllRelationsAsync(oldRuleId);
+        oldRuleCheck.Should().BeNull();
+
+        // Verify new rule has its own relations
+        var newRuleCheck = await taxRuleRepository.GetByIdWithAllRelationsAsync(newRule.Id);
+        newRuleCheck.Should().NotBeNull();
+        newRuleCheck!.Intervals.Should().HaveCount(3);
+        newRuleCheck.TollFreeDates.Should().HaveCount(2);
+    }
+
     public void Dispose()
     {
         _fixture.Dispose();

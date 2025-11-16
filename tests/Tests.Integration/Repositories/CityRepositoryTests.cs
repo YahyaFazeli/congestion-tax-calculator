@@ -235,6 +235,53 @@ public class CityRepositoryTests : IDisposable
         result.Should().BeFalse();
     }
 
+    [Fact]
+    public async Task AddTaxRuleAsync_ValidRule_PersistsToDatabase()
+    {
+        // Arrange
+        await using var context = _fixture.CreateContext();
+        var repository = new CityRepository(context);
+        var city = TestDataBuilder.CreateTestCity("Stockholm");
+        await repository.AddAsync(city);
+
+        var taxRule = TestDataBuilder.CreateTestRule(city.Id, 2024);
+
+        // Act
+        var result = await repository.AddTaxRuleAsync(taxRule);
+
+        // Assert
+        result.Should().NotBeNull();
+        result.Id.Should().Be(taxRule.Id);
+        result.Year.Should().Be(2024);
+
+        // Verify it's in database
+        context.ChangeTracker.Clear();
+        var retrieved = await repository.GetByIdWithRulesAsync(city.Id);
+        retrieved.Should().NotBeNull();
+        retrieved!.TaxRules.Should().HaveCount(1);
+        retrieved.TaxRules.First().Year.Should().Be(2024);
+    }
+
+    [Fact]
+    public async Task UpdateAsync_ExistingCity_UpdatesInDatabase()
+    {
+        // Arrange
+        await using var context = _fixture.CreateContext();
+        var repository = new CityRepository(context);
+        var city = TestDataBuilder.CreateTestCity("OldName");
+        await repository.AddAsync(city);
+
+        // Act
+        city.UpdateName("NewName");
+        await repository.UpdateAsync(city);
+
+        // Assert
+        context.ChangeTracker.Clear();
+        var retrieved = await repository.GetByIdAsync(city.Id);
+        retrieved.Should().NotBeNull();
+        retrieved!.Name.Should().Be("NewName");
+    }
+
     public void Dispose()
     {
         _fixture.Dispose();
