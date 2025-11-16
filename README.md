@@ -57,7 +57,7 @@ congestion-tax-calculator/
 ### Clone the Repository
 
 ```bash
-git clone https://github.com/yourusername/congestion-tax-calculator.git
+git clone https://github.com/yahyafazeli/congestion-tax-calculator.git
 cd congestion-tax-calculator
 ```
 
