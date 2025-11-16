@@ -60,12 +60,12 @@ public static class SeedData
 
         var freeVehicles = new List<TollFreeVehicle>
         {
-            TollFreeVehicle.Create(Guid.Empty, VehicleType.Motorbike),
-            TollFreeVehicle.Create(Guid.Empty, VehicleType.Bus),
-            TollFreeVehicle.Create(Guid.Empty, VehicleType.Emergency),
-            TollFreeVehicle.Create(Guid.Empty, VehicleType.Diplomat),
-            TollFreeVehicle.Create(Guid.Empty, VehicleType.Foreign),
-            TollFreeVehicle.Create(Guid.Empty, VehicleType.Military),
+            TollFreeVehicle.Create(VehicleType.Motorbike),
+            TollFreeVehicle.Create(VehicleType.Bus),
+            TollFreeVehicle.Create(VehicleType.Emergency),
+            TollFreeVehicle.Create(VehicleType.Diplomat),
+            TollFreeVehicle.Create(VehicleType.Foreign),
+            TollFreeVehicle.Create(VehicleType.Military),
         };
 
         var taxRule = TaxRule.Create(

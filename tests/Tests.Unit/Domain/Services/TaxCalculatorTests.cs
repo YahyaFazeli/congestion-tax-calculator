@@ -486,12 +486,12 @@ public class TaxCalculatorTests
 
         var exemptVehicles = new[]
         {
-            TollFreeVehicle.Create(ruleId, VehicleType.Motorbike),
-            TollFreeVehicle.Create(ruleId, VehicleType.Bus),
-            TollFreeVehicle.Create(ruleId, VehicleType.Emergency),
-            TollFreeVehicle.Create(ruleId, VehicleType.Diplomat),
-            TollFreeVehicle.Create(ruleId, VehicleType.Military),
-            TollFreeVehicle.Create(ruleId, VehicleType.Foreign),
+            TollFreeVehicle.Create(VehicleType.Motorbike),
+            TollFreeVehicle.Create(VehicleType.Bus),
+            TollFreeVehicle.Create(VehicleType.Emergency),
+            TollFreeVehicle.Create(VehicleType.Diplomat),
+            TollFreeVehicle.Create(VehicleType.Military),
+            TollFreeVehicle.Create(VehicleType.Foreign),
         };
 
         return new TaxRule(

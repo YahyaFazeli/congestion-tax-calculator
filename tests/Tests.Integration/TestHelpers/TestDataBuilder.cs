@@ -38,8 +38,8 @@ public static class TestDataBuilder
 
         var exemptVehicles = new[]
         {
-            TollFreeVehicle.Create(ruleId, VehicleType.Motorbike),
-            TollFreeVehicle.Create(ruleId, VehicleType.Bus),
+            TollFreeVehicle.Create(VehicleType.Motorbike),
+            TollFreeVehicle.Create(VehicleType.Bus),
         };
 
         return new TaxRule(

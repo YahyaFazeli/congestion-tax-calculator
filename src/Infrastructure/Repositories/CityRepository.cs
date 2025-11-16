@@ -5,15 +5,15 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Repositories;
 
-public class CityRepository(CongestionTaxDbContext context) : Repository<City>(context), ICityRepository
+public class CityRepository(CongestionTaxDbContext context)
+    : Repository<City>(context),
+        ICityRepository
 {
     public override async Task<IEnumerable<City>> GetAllAsync(
         CancellationToken cancellationToken = default
     )
     {
-        return await _dbSet
-            .Include(c => c.TaxRules)
-            .ToListAsync(cancellationToken);
+        return await _dbSet.Include(c => c.TaxRules).ToListAsync(cancellationToken);
     }
 
     public async Task<City?> GetByNameAsync(
@@ -35,7 +35,6 @@ public class CityRepository(CongestionTaxDbContext context) : Repository<City>(c
             .FirstOrDefaultAsync(cancellationToken);
     }
 
-
     public async Task<City?> GetByIdWithDetailedRulesAsync(
         Guid id,
         Guid ruleId,
@@ -55,5 +54,15 @@ public class CityRepository(CongestionTaxDbContext context) : Repository<City>(c
                 .ThenInclude(r => r.TollFreeVehicles)
             .Where(c => c.Id == id && c.TaxRules.Any(d => d.Id == ruleId))
             .FirstOrDefaultAsync(cancellationToken);
+    }
+
+    public async Task<TaxRule> AddTaxRuleAsync(
+        TaxRule taxRule,
+        CancellationToken cancellationToken = default
+    )
+    {
+        await _context.TaxRules.AddAsync(taxRule, cancellationToken);
+        await _context.SaveChangesAsync(cancellationToken);
+        return taxRule;
     }
 }

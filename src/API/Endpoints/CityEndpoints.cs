@@ -1,4 +1,5 @@
 using API.ViewModels;
+using Application.Commands.AddCityTaxRule;
 using Application.Commands.CreateCity;
 using Application.Commands.UpdateCity;
 using Application.Queries.GetAllCities;
@@ -37,6 +38,12 @@ public static class CityEndpoints
             .WithName("GetCityTaxRules")
             .WithSummary("Get simple tax rules for a city")
             .WithDescription("Returns basic tax rule entities without detailed mapping");
+
+        group
+            .MapPost("/{cityId:guid}/rules", AddCityTaxRule)
+            .WithName("AddCityTaxRule")
+            .WithSummary("Add a new tax rule to a city")
+            .WithDescription("Creates a new tax rule for the specified city and year");
 
         group
             .MapGet("/{cityId:guid}/rules/{ruleId:guid}", GetCityTaxRule)
@@ -81,6 +88,30 @@ public static class CityEndpoints
         var result = await sender.Send(command, cancellationToken);
 
         return Results.Ok(result);
+    }
+
+    private static async Task<IResult> AddCityTaxRule(
+        [FromRoute] Guid cityId,
+        [FromBody] AddCityTaxRuleRequest request,
+        [FromServices] ISender sender,
+        CancellationToken cancellationToken
+    )
+    {
+        var command = new AddCityTaxRuleCommand(
+            cityId,
+            request.Year,
+            request.DailyMax,
+            request.SingleChargeMinutes,
+            request.Intervals.Select(i => new TollIntervalDto(i.Start, i.End, i.Amount)),
+            request.FreeDates.Select(d => new TollFreeDateDto(d.Date, d.IncludeDayBefore)),
+            request.FreeMonths,
+            request.FreeWeekdays,
+            request.FreeVehicles
+        );
+
+        var result = await sender.Send(command, cancellationToken);
+
+        return Results.Created($"/api/cities/{cityId}/rules/{result.RuleId}", result);
     }
 
     private static async Task<IResult> GetCityTaxRules(

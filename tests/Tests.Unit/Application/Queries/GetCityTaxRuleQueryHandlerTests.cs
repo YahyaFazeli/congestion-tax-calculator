@@ -219,7 +219,7 @@ public class GetCityTaxRuleQueryHandlerTests
             TollFreeWeekday.Create(DayOfWeek.Sunday),
         };
 
-        var exemptVehicles = new[] { TollFreeVehicle.Create(ruleId, VehicleType.Motorbike) };
+        var exemptVehicles = new[] { TollFreeVehicle.Create(VehicleType.Motorbike) };
 
         return new TaxRule(
             ruleId,

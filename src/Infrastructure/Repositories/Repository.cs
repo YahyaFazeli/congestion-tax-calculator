@@ -1,11 +1,12 @@
-using Domain.Interfaces;
 using Domain.Base;
+using Domain.Interfaces;
 using Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Repositories;
 
-public class Repository<T>(CongestionTaxDbContext context) : IRepository<T> where T : Entity
+public class Repository<T>(CongestionTaxDbContext context) : IRepository<T>
+    where T : Entity
 {
     protected readonly CongestionTaxDbContext _context = context;
     protected readonly DbSet<T> _dbSet = context.Set<T>();
@@ -54,5 +55,10 @@ public class Repository<T>(CongestionTaxDbContext context) : IRepository<T> wher
     )
     {
         return await _dbSet.AnyAsync(e => e.Id == id, cancellationToken);
+    }
+
+    public virtual async Task SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        await _context.SaveChangesAsync(cancellationToken);
     }
 }

@@ -11,19 +11,79 @@ Accept: application/json
 
 ###
 
-### 2. Get City Tax Rules (Summary)
+### 2. Create a New City
+POST {{baseUrl}}/api/cities
+Content-Type: application/json
+
+{
+  "name": "Stockholm"
+}
+
+###
+
+### 3. Update City Name
+# Replace {newCityId} with the ID returned from Create City request
+PUT {{baseUrl}}/api/cities/{{cityId}}
+Content-Type: application/json
+
+{
+  "name": "Gothenburg Updated"
+}
+
+###
+
+### 4. Add Tax Rule to City
+# Creates a complete tax rule with intervals, exemptions, and toll-free periods
+POST {{baseUrl}}/api/cities/{{cityId}}/rules
+Content-Type: application/json
+
+{
+  "year": 2025,
+  "dailyMax": 60,
+  "singleChargeMinutes": 60,
+  "intervals": [
+    { "start": "06:00", "end": "06:29", "amount": 8 },
+    { "start": "06:30", "end": "06:59", "amount": 13 },
+    { "start": "07:00", "end": "07:59", "amount": 18 },
+    { "start": "08:00", "end": "08:29", "amount": 13 },
+    { "start": "08:30", "end": "14:59", "amount": 8 },
+    { "start": "15:00", "end": "15:29", "amount": 13 },
+    { "start": "15:30", "end": "16:59", "amount": 18 },
+    { "start": "17:00", "end": "17:59", "amount": 13 },
+    { "start": "18:00", "end": "18:29", "amount": 8 }
+  ],
+  "freeDates": [
+    { "date": "2025-01-01", "includeDayBefore": true },
+    { "date": "2025-01-06", "includeDayBefore": true },
+    { "date": "2025-04-18", "includeDayBefore": true },
+    { "date": "2025-04-21", "includeDayBefore": true },
+    { "date": "2025-05-01", "includeDayBefore": true },
+    { "date": "2025-05-29", "includeDayBefore": true },
+    { "date": "2025-06-06", "includeDayBefore": true },
+    { "date": "2025-06-20", "includeDayBefore": true },
+    { "date": "2025-12-25", "includeDayBefore": true },
+    { "date": "2025-12-26", "includeDayBefore": true }
+  ],
+  "freeMonths": [7],
+  "freeWeekdays": [6, 0],
+  "freeVehicles": [2, 3, 4, 5, 6, 7]
+}
+
+###
+
+### 5. Get City Tax Rules (Summary)
 GET {{baseUrl}}/api/cities/{{cityId}}/rules
 Accept: application/json
 
 ###
 
-### 3. Get Specific Tax Rule (Detailed with all intervals and exemptions)
+### 6. Get Specific Tax Rule (Detailed with all intervals and exemptions)
 GET {{baseUrl}}/api/cities/{{cityId}}/rules/{{ruleId}}
 Accept: application/json
 
 ###
 
-### 4. Calculate Tax - Simple Case (Expected: 21 SEK)
+### 7. Calculate Tax - Simple Case (Expected: 21 SEK)
 # Two passes on same day, different time windows
 POST {{baseUrl}}/api/tax/calculate
 Content-Type: application/json
@@ -32,7 +92,7 @@ Content-Type: application/json
   "cityId": "{{cityId}}",
   "year": 2013,
   "vehicleRegistration": "ABC123",
-  "vehicleType": 0,
+  "vehicleType": 1,
   "timestamps": [
     "2013-02-07T06:23:27",
     "2013-02-07T15:27:00"
@@ -41,7 +101,7 @@ Content-Type: application/json
 
 ###
 
-### 5. Calculate Tax - Daily Cap (Expected: 60 SEK - capped at daily maximum)
+### 8. Calculate Tax - Daily Cap (Expected: 60 SEK - capped at daily maximum)
 # Multiple passes exceeding 60 SEK, demonstrates single charge rule and daily cap
 POST {{baseUrl}}/api/tax/calculate
 Content-Type: application/json
@@ -50,7 +110,7 @@ Content-Type: application/json
   "cityId": "{{cityId}}",
   "year": 2013,
   "vehicleRegistration": "ABC123",
-  "vehicleType": 0,
+  "vehicleType": 1,
   "timestamps": [
     "2013-02-08T06:20:27",
     "2013-02-08T06:27:00",
@@ -67,7 +127,7 @@ Content-Type: application/json
 
 ###
 
-### 6. Calculate Tax - Assignment Test Data (Expected: 89 SEK)
+### 9. Calculate Tax - Assignment Test Data (Expected: 89 SEK)
 # All timestamps from ASSIGNMENT.md - validates complete implementation
 POST {{baseUrl}}/api/tax/calculate
 Content-Type: application/json
@@ -76,7 +136,7 @@ Content-Type: application/json
   "cityId": "{{cityId}}",
   "year": 2013,
   "vehicleRegistration": "TEST123",
-  "vehicleType": 0,
+  "vehicleType": 1,
   "timestamps": [
     "2013-01-14T21:00:00",
     "2013-01-15T21:00:00",
@@ -99,7 +159,7 @@ Content-Type: application/json
 
 ###
 
-### 7. Calculate Tax - Exempt Vehicle (Expected: 0 SEK)
+### 10. Calculate Tax - Exempt Vehicle (Expected: 0 SEK)
 # Motorbike is tax-exempt
 POST {{baseUrl}}/api/tax/calculate
 Content-Type: application/json
@@ -117,7 +177,7 @@ Content-Type: application/json
 
 ###
 
-### 8. Calculate Tax - Weekend (Expected: 0 SEK)
+### 11. Calculate Tax - Weekend (Expected: 0 SEK)
 # Saturday is toll-free
 POST {{baseUrl}}/api/tax/calculate
 Content-Type: application/json
@@ -126,7 +186,7 @@ Content-Type: application/json
   "cityId": "{{cityId}}",
   "year": 2013,
   "vehicleRegistration": "ABC123",
-  "vehicleType": 0,
+  "vehicleType": 1,
   "timestamps": [
     "2013-02-09T07:30:00",
     "2013-02-09T15:30:00"
@@ -135,7 +195,7 @@ Content-Type: application/json
 
 ###
 
-### 9. Calculate Tax - July (Expected: 0 SEK)
+### 12. Calculate Tax - July (Expected: 0 SEK)
 # July is toll-free month
 POST {{baseUrl}}/api/tax/calculate
 Content-Type: application/json
@@ -144,7 +204,7 @@ Content-Type: application/json
   "cityId": "{{cityId}}",
   "year": 2013,
   "vehicleRegistration": "ABC123",
-  "vehicleType": 0,
+  "vehicleType": 1,
   "timestamps": [
     "2013-07-15T07:30:00",
     "2013-07-15T15:30:00"
@@ -153,7 +213,7 @@ Content-Type: application/json
 
 ###
 
-### 10. Calculate Tax - Day Before Holiday (Expected: 0 SEK)
+### 13. Calculate Tax - Day Before Holiday (Expected: 0 SEK)
 # Day before Good Friday (2013-03-29) is toll-free
 POST {{baseUrl}}/api/tax/calculate
 Content-Type: application/json
@@ -162,7 +222,7 @@ Content-Type: application/json
   "cityId": "{{cityId}}",
   "year": 2013,
   "vehicleRegistration": "ABC123",
-  "vehicleType": 0,
+  "vehicleType": 1,
   "timestamps": [
     "2013-03-28T14:07:27"
   ]
@@ -170,11 +230,9 @@ Content-Type: application/json
 
 ###
 
-# Vehicle Types:
-# 0 = Car (taxable)
-# 1 = Motorbike (exempt)
-# 2 = Emergency (exempt)
-# 3 = Bus (exempt)
-# 4 = Diplomat (exempt)
-# 5 = Military (exempt)
-# 6 = Foreign (exempt)
+# Notes:
+# - Vehicle Types: 1=Car (taxable), 2=Motorbike, 3=Emergency, 4=Bus, 5=Diplomat, 6=Military, 7=Foreign
+# - Free Months: 1=January, 2=February, ..., 7=July, ..., 12=December
+# - Free Weekdays: 0=Sunday, 1=Monday, ..., 6=Saturday
+# - Time format: "HH:mm" (24-hour format)
+# - Date format: "yyyy-MM-dd"

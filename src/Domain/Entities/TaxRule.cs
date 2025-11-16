@@ -10,7 +10,6 @@ public sealed class TaxRule : Entity
     public Money DailyMax { get; private set; }
     public int SingleChargeMinutes { get; private set; }
 
-
     private readonly List<TollInterval> _intervals = [];
     private readonly List<TollFreeDate> _tollFreeDates = [];
     private readonly List<TollFreeMonth> _tollFreeMonths = [];
@@ -22,7 +21,6 @@ public sealed class TaxRule : Entity
     public IReadOnlyCollection<TollFreeMonth> TollFreeMonths => _tollFreeMonths;
     public IReadOnlyCollection<TollFreeWeekday> TollFreeWeekdays => _tollFreeWeekdays;
     public IReadOnlyCollection<TollFreeVehicle> TollFreeVehicles => _tollFreeVehicles;
-
 
     private TaxRule() { }
 

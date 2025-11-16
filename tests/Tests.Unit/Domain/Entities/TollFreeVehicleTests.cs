@@ -11,7 +11,7 @@ public class TollFreeVehicleTests
     public void Create_WithValidVehicleType_CreatesTollFreeVehicle()
     {
         // Arrange & Act
-        var tollFreeVehicle = TollFreeVehicle.Create(Guid.NewGuid(), VehicleType.Motorbike);
+        var tollFreeVehicle = TollFreeVehicle.Create(VehicleType.Motorbike);
 
         // Assert
         tollFreeVehicle.VehicleType.Should().Be(VehicleType.Motorbike);
@@ -22,7 +22,7 @@ public class TollFreeVehicleTests
     public void Matches_MatchingVehicleType_ReturnsTrue()
     {
         // Arrange
-        var tollFreeVehicle = TollFreeVehicle.Create(Guid.NewGuid(), VehicleType.Motorbike);
+        var tollFreeVehicle = TollFreeVehicle.Create(VehicleType.Motorbike);
         var vehicle = new Vehicle("ABC123", VehicleType.Motorbike);
 
         // Act
@@ -36,7 +36,7 @@ public class TollFreeVehicleTests
     public void Matches_NonMatchingVehicleType_ReturnsFalse()
     {
         // Arrange
-        var tollFreeVehicle = TollFreeVehicle.Create(Guid.NewGuid(), VehicleType.Motorbike);
+        var tollFreeVehicle = TollFreeVehicle.Create(VehicleType.Motorbike);
         var vehicle = new Vehicle("ABC123", VehicleType.Car);
 
         // Act
@@ -56,7 +56,7 @@ public class TollFreeVehicleTests
     public void Matches_AllExemptVehicleTypes_ReturnsTrue(VehicleType type)
     {
         // Arrange
-        var tollFreeVehicle = TollFreeVehicle.Create(Guid.NewGuid(), type);
+        var tollFreeVehicle = TollFreeVehicle.Create(type);
         var vehicle = new Vehicle("ABC123", type);
 
         // Act

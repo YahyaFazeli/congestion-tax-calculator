@@ -255,8 +255,7 @@ public class TaxRuleTests
 
     private static TaxRule CreateTestRuleWithExemptVehicles(params VehicleType[] types)
     {
-        var ruleId = Guid.NewGuid();
-        var exemptVehicles = types.Select(t => TollFreeVehicle.Create(ruleId, t)).ToList();
+        var exemptVehicles = types.Select(t => TollFreeVehicle.Create(t)).ToList();
 
         return TaxRule.Create(
             Guid.NewGuid(),
