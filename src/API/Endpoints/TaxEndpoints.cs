@@ -1,5 +1,5 @@
+using API.ViewModels;
 using Application.Commands.CalculateTax;
-using Domain.Enums;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
@@ -39,11 +39,3 @@ public static class TaxEndpoints
         return Results.Ok(result);
     }
 }
-
-public sealed record CalculateTaxRequest(
-    Guid CityId,
-    int Year,
-    string VehicleRegistration,
-    VehicleType VehicleType,
-    IEnumerable<DateTime> Timestamps
-);

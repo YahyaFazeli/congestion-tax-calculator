@@ -1,3 +1,5 @@
+using API.ViewModels;
+using Application.Commands.CreateCity;
 using Application.Queries.GetAllCities;
 using Application.Queries.GetCityTaxRules;
 using MediatR;
@@ -16,6 +18,12 @@ public static class CityEndpoints
             .WithName("GetAllCities")
             .WithSummary("Get all cities")
             .WithDescription("Returns a list of all cities with their IDs and names");
+
+        group
+            .MapPost("", CreateCity)
+            .WithName("CreateCity")
+            .WithSummary("Create a new city")
+            .WithDescription("Creates a new city with the specified name");
 
         group
             .MapGet("/{cityId:guid}/rules", GetCityTaxRules)
@@ -41,6 +49,18 @@ public static class CityEndpoints
         var result = await sender.Send(query, cancellationToken);
 
         return Results.Ok(result);
+    }
+
+    private static async Task<IResult> CreateCity(
+        [FromBody] CreateCityRequest request,
+        [FromServices] ISender sender,
+        CancellationToken cancellationToken
+    )
+    {
+        var command = new CreateCityCommand(request.Name);
+        var result = await sender.Send(command, cancellationToken);
+
+        return Results.Created($"/api/cities/{result.Id}", result);
     }
 
     private static async Task<IResult> GetCityTaxRules(
