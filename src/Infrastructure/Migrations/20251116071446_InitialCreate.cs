@@ -86,8 +86,8 @@ namespace Infrastructure.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    TaxRuleId = table.Column<Guid>(type: "uuid", nullable: false),
-                    VehicleType = table.Column<byte>(type: "smallint", nullable: false)
+                    VehicleType = table.Column<byte>(type: "smallint", nullable: false),
+                    TaxRuleId = table.Column<Guid>(type: "uuid", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -96,8 +96,7 @@ namespace Infrastructure.Migrations
                         name: "FK_TollFreeVehicles_TaxRules_TaxRuleId",
                         column: x => x.TaxRuleId,
                         principalTable: "TaxRules",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(

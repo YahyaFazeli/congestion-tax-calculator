@@ -2,8 +2,8 @@
 ### Use with REST Client extension in VS Code
 
 @baseUrl = https://localhost:7180
-@cityId = 019a88cc-515e-76b1-a384-22fe207abe35
-@ruleId = 019a88cc-5168-72cb-91f3-76fd5bee14f7
+@cityId = 019a8b89-660a-70a2-a632-6a3c5eade620
+@ruleId = 019a8b89-660d-73e1-b501-bde09cb1c53e
 
 ### 1. Get All Cities
 GET {{baseUrl}}/api/cities
@@ -83,7 +83,51 @@ Accept: application/json
 
 ###
 
-### 7. Calculate Tax - Simple Case (Expected: 21 SEK)
+### 7. Update Existing Tax Rule
+# Updates an existing tax rule with new configuration
+PUT {{baseUrl}}/api/cities/{{cityId}}/rules/{{ruleId}}
+Content-Type: application/json
+
+{
+  "year": 2013,
+  "dailyMax": 75,
+  "singleChargeMinutes": 60,
+  "intervals": [
+    { "start": "06:00", "end": "06:29", "amount": 10 },
+    { "start": "06:30", "end": "06:59", "amount": 15 },
+    { "start": "07:00", "end": "07:59", "amount": 20 },
+    { "start": "08:00", "end": "08:29", "amount": 15 },
+    { "start": "08:30", "end": "14:59", "amount": 10 },
+    { "start": "15:00", "end": "15:29", "amount": 15 },
+    { "start": "15:30", "end": "16:59", "amount": 20 },
+    { "start": "17:00", "end": "17:59", "amount": 15 },
+    { "start": "18:00", "end": "18:29", "amount": 10 }
+  ],
+  "freeDates": [
+    { "date": "2013-01-01", "includeDayBefore": true },
+    { "date": "2013-01-06", "includeDayBefore": true },
+    { "date": "2013-03-29", "includeDayBefore": true },
+    { "date": "2013-03-31", "includeDayBefore": true },
+    { "date": "2013-04-01", "includeDayBefore": true },
+    { "date": "2013-05-01", "includeDayBefore": true },
+    { "date": "2013-05-09", "includeDayBefore": true },
+    { "date": "2013-05-19", "includeDayBefore": true },
+    { "date": "2013-05-20", "includeDayBefore": true },
+    { "date": "2013-06-06", "includeDayBefore": true },
+    { "date": "2013-06-22", "includeDayBefore": true },
+    { "date": "2013-11-01", "includeDayBefore": true },
+    { "date": "2013-12-25", "includeDayBefore": true },
+    { "date": "2013-12-26", "includeDayBefore": true },
+    { "date": "2013-12-31", "includeDayBefore": true }
+  ],
+  "freeMonths": [7],
+  "freeWeekdays": [6, 0],
+  "freeVehicles": [2, 3, 4, 5, 6, 7]
+}
+
+###
+
+### 8. Calculate Tax - Simple Case (Expected: 21 SEK)
 # Two passes on same day, different time windows
 POST {{baseUrl}}/api/tax/calculate
 Content-Type: application/json
@@ -101,7 +145,7 @@ Content-Type: application/json
 
 ###
 
-### 8. Calculate Tax - Daily Cap (Expected: 60 SEK - capped at daily maximum)
+### 9. Calculate Tax - Daily Cap (Expected: 60 SEK - capped at daily maximum)
 # Multiple passes exceeding 60 SEK, demonstrates single charge rule and daily cap
 POST {{baseUrl}}/api/tax/calculate
 Content-Type: application/json
@@ -127,7 +171,7 @@ Content-Type: application/json
 
 ###
 
-### 9. Calculate Tax - Assignment Test Data (Expected: 89 SEK)
+### 10. Calculate Tax - Assignment Test Data (Expected: 89 SEK)
 # All timestamps from ASSIGNMENT.md - validates complete implementation
 POST {{baseUrl}}/api/tax/calculate
 Content-Type: application/json
@@ -159,7 +203,7 @@ Content-Type: application/json
 
 ###
 
-### 10. Calculate Tax - Exempt Vehicle (Expected: 0 SEK)
+### 11. Calculate Tax - Exempt Vehicle (Expected: 0 SEK)
 # Motorbike is tax-exempt
 POST {{baseUrl}}/api/tax/calculate
 Content-Type: application/json
@@ -177,7 +221,7 @@ Content-Type: application/json
 
 ###
 
-### 11. Calculate Tax - Weekend (Expected: 0 SEK)
+### 12. Calculate Tax - Weekend (Expected: 0 SEK)
 # Saturday is toll-free
 POST {{baseUrl}}/api/tax/calculate
 Content-Type: application/json
@@ -195,7 +239,7 @@ Content-Type: application/json
 
 ###
 
-### 12. Calculate Tax - July (Expected: 0 SEK)
+### 13. Calculate Tax - July (Expected: 0 SEK)
 # July is toll-free month
 POST {{baseUrl}}/api/tax/calculate
 Content-Type: application/json
@@ -213,7 +257,7 @@ Content-Type: application/json
 
 ###
 
-### 13. Calculate Tax - Day Before Holiday (Expected: 0 SEK)
+### 14. Calculate Tax - Day Before Holiday (Expected: 0 SEK)
 # Day before Good Friday (2013-03-29) is toll-free
 POST {{baseUrl}}/api/tax/calculate
 Content-Type: application/json

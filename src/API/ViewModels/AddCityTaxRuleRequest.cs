@@ -1,6 +1,6 @@
 using Domain.Enums;
 
-namespace API.Endpoints;
+namespace API.ViewModels;
 
 public sealed record AddCityTaxRuleRequest(
     int Year,

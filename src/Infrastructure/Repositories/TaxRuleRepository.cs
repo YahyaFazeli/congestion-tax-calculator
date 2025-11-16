@@ -5,7 +5,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Repositories;
 
-public class TaxRuleRepository(CongestionTaxDbContext context) : Repository<TaxRule>(context), ITaxRuleRepository
+public class TaxRuleRepository(CongestionTaxDbContext context)
+    : Repository<TaxRule>(context),
+        ITaxRuleRepository
 {
     public async Task<TaxRule?> GetByCityAndYearAsync(
         Guid cityId,
@@ -62,5 +64,22 @@ public class TaxRuleRepository(CongestionTaxDbContext context) : Repository<TaxR
             .Include(r => r.TollFreeWeekdays)
             .Include(r => r.TollFreeVehicles)
             .ToListAsync(cancellationToken);
+    }
+
+    public async Task ReplaceRuleAsync(
+        Guid oldRuleId,
+        TaxRule newRule,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var oldRule = await GetByIdWithAllRelationsAsync(oldRuleId, cancellationToken);
+
+        if (oldRule is not null)
+        {
+            _dbSet.Remove(oldRule);
+        }
+
+        await _dbSet.AddAsync(newRule, cancellationToken);
+        await _context.SaveChangesAsync(cancellationToken);
     }
 }

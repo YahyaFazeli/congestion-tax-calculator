@@ -2,6 +2,7 @@ using API.ViewModels;
 using Application.Commands.AddCityTaxRule;
 using Application.Commands.CreateCity;
 using Application.Commands.UpdateCity;
+using Application.Commands.UpdateCityTaxRule;
 using Application.Queries.GetAllCities;
 using Application.Queries.GetCityTaxRules;
 using MediatR;
@@ -52,6 +53,12 @@ public static class CityEndpoints
             .WithDescription(
                 "Returns comprehensive tax rule including intervals, free dates, and exemptions"
             );
+
+        group
+            .MapPut("/{cityId:guid}/rules/{ruleId:guid}", UpdateCityTaxRule)
+            .WithName("UpdateCityTaxRule")
+            .WithSummary("Update an existing tax rule")
+            .WithDescription("Updates an existing tax rule with new configuration");
     }
 
     private static async Task<IResult> GetAllCities(
@@ -102,8 +109,15 @@ public static class CityEndpoints
             request.Year,
             request.DailyMax,
             request.SingleChargeMinutes,
-            request.Intervals.Select(i => new TollIntervalDto(i.Start, i.End, i.Amount)),
-            request.FreeDates.Select(d => new TollFreeDateDto(d.Date, d.IncludeDayBefore)),
+            request.Intervals.Select(i => new Application.Commands.AddCityTaxRule.TollIntervalDto(
+                i.Start,
+                i.End,
+                i.Amount
+            )),
+            request.FreeDates.Select(d => new Application.Commands.AddCityTaxRule.TollFreeDateDto(
+                d.Date,
+                d.IncludeDayBefore
+            )),
             request.FreeMonths,
             request.FreeWeekdays,
             request.FreeVehicles
@@ -141,5 +155,42 @@ public static class CityEndpoints
         return result is not null
             ? Results.Ok(result)
             : Results.NotFound(new { Message = $"City Rule with ID {ruleId} not found" });
+    }
+
+    private static async Task<IResult> UpdateCityTaxRule(
+        [FromRoute] Guid cityId,
+        [FromRoute] Guid ruleId,
+        [FromBody] UpdateCityTaxRuleRequest request,
+        [FromServices] ISender sender,
+        CancellationToken cancellationToken
+    )
+    {
+        var command = new UpdateCityTaxRuleCommand(
+            cityId,
+            ruleId,
+            request.Year,
+            request.DailyMax,
+            request.SingleChargeMinutes,
+            request.Intervals.Select(
+                i => new Application.Commands.UpdateCityTaxRule.TollIntervalDto(
+                    i.Start,
+                    i.End,
+                    i.Amount
+                )
+            ),
+            request.FreeDates.Select(
+                d => new Application.Commands.UpdateCityTaxRule.TollFreeDateDto(
+                    d.Date,
+                    d.IncludeDayBefore
+                )
+            ),
+            request.FreeMonths,
+            request.FreeWeekdays,
+            request.FreeVehicles
+        );
+
+        var result = await sender.Send(command, cancellationToken);
+
+        return Results.Ok(result);
     }
 }

@@ -19,4 +19,10 @@ public interface ITaxRuleRepository : IRepository<TaxRule>
         Guid id,
         CancellationToken cancellationToken = default
     );
+
+    Task ReplaceRuleAsync(
+        Guid oldRuleId,
+        TaxRule newRule,
+        CancellationToken cancellationToken = default
+    );
 }

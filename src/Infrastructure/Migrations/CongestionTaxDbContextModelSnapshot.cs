@@ -111,7 +111,7 @@ namespace Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("TaxRuleId")
+                    b.Property<Guid?>("TaxRuleId")
                         .HasColumnType("uuid");
 
                     b.Property<byte>("VehicleType")
@@ -195,9 +195,7 @@ namespace Infrastructure.Migrations
                 {
                     b.HasOne("Domain.Entities.TaxRule", null)
                         .WithMany("TollFreeVehicles")
-                        .HasForeignKey("TaxRuleId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("TaxRuleId");
                 });
 
             modelBuilder.Entity("Domain.Entities.TollFreeWeekday", b =>

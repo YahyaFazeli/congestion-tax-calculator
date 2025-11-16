@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(CongestionTaxDbContext))]
-    [Migration("20251115194643_InitialCreate")]
+    [Migration("20251116071446_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -114,7 +114,7 @@ namespace Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("TaxRuleId")
+                    b.Property<Guid?>("TaxRuleId")
                         .HasColumnType("uuid");
 
                     b.Property<byte>("VehicleType")
@@ -198,9 +198,7 @@ namespace Infrastructure.Migrations
                 {
                     b.HasOne("Domain.Entities.TaxRule", null)
                         .WithMany("TollFreeVehicles")
-                        .HasForeignKey("TaxRuleId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("TaxRuleId");
                 });
 
             modelBuilder.Entity("Domain.Entities.TollFreeWeekday", b =>
