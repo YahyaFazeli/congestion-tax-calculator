@@ -2,6 +2,7 @@ using Application.Queries.GetAllCities;
 using Domain.Entities;
 using Domain.Interfaces;
 using FluentAssertions;
+using Microsoft.Extensions.Logging;
 using Moq;
 
 namespace Tests.Unit.Application.Queries;
@@ -9,12 +10,14 @@ namespace Tests.Unit.Application.Queries;
 public class GetAllCitiesQueryHandlerTests
 {
     private readonly Mock<ICityRepository> _mockRepository;
+    private readonly Mock<ILogger<GetAllCitiesQueryHandler>> _mockLogger;
     private readonly GetAllCitiesQueryHandler _handler;
 
     public GetAllCitiesQueryHandlerTests()
     {
         _mockRepository = new Mock<ICityRepository>();
-        _handler = new GetAllCitiesQueryHandler(_mockRepository.Object);
+        _mockLogger = new Mock<ILogger<GetAllCitiesQueryHandler>>();
+        _handler = new GetAllCitiesQueryHandler(_mockRepository.Object, _mockLogger.Object);
     }
 
     [Fact]

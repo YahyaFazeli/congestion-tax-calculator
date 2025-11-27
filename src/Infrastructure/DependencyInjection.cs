@@ -1,4 +1,5 @@
 using Domain.Interfaces;
+using Infrastructure.Interceptors;
 using Infrastructure.Persistence;
 using Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -14,27 +15,36 @@ public static class DependencyInjection
         IConfiguration configuration
     )
     {
-        // Add DbContext with PostgreSQL
-        services.AddDbContext<CongestionTaxDbContext>(options =>
-        {
-            var connectionString =
-                configuration.GetConnectionString("CongestionTaxDb")
-                ?? throw new InvalidOperationException(
-                    "Connection string 'CongestionTaxDb' not found."
-                );
+        // Register the slow query interceptor
+        services.AddSingleton<SlowQueryInterceptor>();
 
-            options.UseNpgsql(
-                connectionString,
-                npgsqlOptions =>
-                {
-                    npgsqlOptions.EnableRetryOnFailure(
-                        maxRetryCount: 5,
-                        maxRetryDelay: TimeSpan.FromSeconds(30),
-                        errorCodesToAdd: null
+        // Add DbContext with PostgreSQL
+        services.AddDbContext<CongestionTaxDbContext>(
+            (serviceProvider, options) =>
+            {
+                var connectionString =
+                    configuration.GetConnectionString("CongestionTaxDb")
+                    ?? throw new InvalidOperationException(
+                        "Connection string 'CongestionTaxDb' not found."
                     );
-                }
-            );
-        });
+
+                var interceptor = serviceProvider.GetRequiredService<SlowQueryInterceptor>();
+
+                options
+                    .UseNpgsql(
+                        connectionString,
+                        npgsqlOptions =>
+                        {
+                            npgsqlOptions.EnableRetryOnFailure(
+                                maxRetryCount: 5,
+                                maxRetryDelay: TimeSpan.FromSeconds(30),
+                                errorCodesToAdd: null
+                            );
+                        }
+                    )
+                    .AddInterceptors(interceptor);
+            }
+        );
 
         // Register repositories
         services.AddScoped<ICityRepository, CityRepository>();

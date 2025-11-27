@@ -5,6 +5,7 @@ using Domain.Interfaces;
 using Domain.Services;
 using Domain.ValueObjects;
 using FluentAssertions;
+using Microsoft.Extensions.Logging;
 using Moq;
 
 namespace Tests.Unit.Application.Commands;
@@ -13,13 +14,19 @@ public class CalculateTaxCommandHandlerTests
 {
     private readonly Mock<ITaxRuleRepository> _mockRepository;
     private readonly Mock<ITaxCalculator> _mockCalculator;
+    private readonly Mock<ILogger<CalculateTaxCommandHandler>> _mockLogger;
     private readonly CalculateTaxCommandHandler _handler;
 
     public CalculateTaxCommandHandlerTests()
     {
         _mockRepository = new Mock<ITaxRuleRepository>();
         _mockCalculator = new Mock<ITaxCalculator>();
-        _handler = new CalculateTaxCommandHandler(_mockRepository.Object, _mockCalculator.Object);
+        _mockLogger = new Mock<ILogger<CalculateTaxCommandHandler>>();
+        _handler = new CalculateTaxCommandHandler(
+            _mockRepository.Object,
+            _mockCalculator.Object,
+            _mockLogger.Object
+        );
     }
 
     [Fact]
@@ -306,6 +313,145 @@ public class CalculateTaxCommandHandlerTests
         // Assert
         _mockRepository.Verify(
             r => r.GetByCityAndYearAsync(cityId, year, cancellationToken),
+            Times.Once
+        );
+    }
+
+    [Fact]
+    public async Task Handle_LogsInformation_WhenCalculatingTax()
+    {
+        // Arrange
+        var cityId = Guid.NewGuid();
+        var year = 2013;
+        var rule = CreateTestRule(cityId, year);
+
+        _mockRepository
+            .Setup(r => r.GetByCityAndYearAsync(cityId, year, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(rule);
+
+        _mockCalculator
+            .Setup(c =>
+                c.Calculate(
+                    It.IsAny<TaxRule>(),
+                    It.IsAny<Vehicle>(),
+                    It.IsAny<IEnumerable<DateTime>>()
+                )
+            )
+            .Returns(new Money(21));
+
+        var command = new CalculateTaxCommand(
+            cityId,
+            year,
+            "ABC123",
+            VehicleType.Car,
+            new[] { new DateTime(2013, 2, 7, 8, 0, 0) }
+        );
+
+        // Act
+        await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        _mockLogger.Verify(
+            x =>
+                x.Log(
+                    LogLevel.Information,
+                    It.IsAny<EventId>(),
+                    It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Calculating tax")),
+                    It.IsAny<Exception>(),
+                    It.IsAny<Func<It.IsAnyType, Exception?, string>>()
+                ),
+            Times.AtLeastOnce
+        );
+    }
+
+    [Fact]
+    public async Task Handle_LogsWarning_WhenRuleNotFound()
+    {
+        // Arrange
+        var cityId = Guid.NewGuid();
+        var year = 2013;
+
+        _mockRepository
+            .Setup(r => r.GetByCityAndYearAsync(cityId, year, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((TaxRule?)null);
+
+        var command = new CalculateTaxCommand(
+            cityId,
+            year,
+            "ABC123",
+            VehicleType.Car,
+            new[] { new DateTime(2013, 2, 7, 8, 0, 0) }
+        );
+
+        // Act
+        try
+        {
+            await _handler.Handle(command, CancellationToken.None);
+        }
+        catch (InvalidOperationException)
+        {
+            // Expected exception
+        }
+
+        // Assert
+        _mockLogger.Verify(
+            x =>
+                x.Log(
+                    LogLevel.Warning,
+                    It.IsAny<EventId>(),
+                    It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("No tax rule found")),
+                    It.IsAny<Exception>(),
+                    It.IsAny<Func<It.IsAnyType, Exception?, string>>()
+                ),
+            Times.Once
+        );
+    }
+
+    [Fact]
+    public async Task Handle_LogsSuccess_WhenTaxCalculatedSuccessfully()
+    {
+        // Arrange
+        var cityId = Guid.NewGuid();
+        var year = 2013;
+        var rule = CreateTestRule(cityId, year);
+
+        _mockRepository
+            .Setup(r => r.GetByCityAndYearAsync(cityId, year, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(rule);
+
+        _mockCalculator
+            .Setup(c =>
+                c.Calculate(
+                    It.IsAny<TaxRule>(),
+                    It.IsAny<Vehicle>(),
+                    It.IsAny<IEnumerable<DateTime>>()
+                )
+            )
+            .Returns(new Money(21));
+
+        var command = new CalculateTaxCommand(
+            cityId,
+            year,
+            "ABC123",
+            VehicleType.Car,
+            new[] { new DateTime(2013, 2, 7, 8, 0, 0) }
+        );
+
+        // Act
+        await _handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        _mockLogger.Verify(
+            x =>
+                x.Log(
+                    LogLevel.Information,
+                    It.IsAny<EventId>(),
+                    It.Is<It.IsAnyType>(
+                        (v, t) => v.ToString()!.Contains("Tax calculated successfully")
+                    ),
+                    It.IsAny<Exception>(),
+                    It.IsAny<Func<It.IsAnyType, Exception?, string>>()
+                ),
             Times.Once
         );
     }

@@ -2,34 +2,78 @@ using Domain.Interfaces;
 using Domain.Services;
 using Domain.ValueObjects;
 using MediatR;
+using Microsoft.Extensions.Logging;
 
 namespace Application.Commands.CalculateTax;
 
 public sealed class CalculateTaxCommandHandler(
     ITaxRuleRepository taxRuleRepository,
-    ITaxCalculator taxCalculator
+    ITaxCalculator taxCalculator,
+    ILogger<CalculateTaxCommandHandler> logger
 ) : IRequestHandler<CalculateTaxCommand, CalculateTaxResult>
 {
+    private static string MaskVehicleRegistration(string registration)
+    {
+        if (string.IsNullOrEmpty(registration) || registration.Length <= 3)
+            return "***";
+        return registration.Substring(0, 3) + "***";
+    }
+
     public async Task<CalculateTaxResult> Handle(
         CalculateTaxCommand request,
         CancellationToken cancellationToken
     )
     {
-        var rule = await taxRuleRepository.GetByCityAndYearAsync(
+        logger.LogInformation(
+            "Calculating tax for CityId: {CityId}, Year: {Year}, VehicleType: {VehicleType}, VehicleRegistration: {VehicleRegistration}",
             request.CityId,
             request.Year,
-            cancellationToken
+            request.VehicleType,
+            MaskVehicleRegistration(request.VehicleRegistration)
         );
 
-        if (rule is null)
-            throw new InvalidOperationException(
-                $"No tax rule found for city {request.CityId} and year {request.Year}"
+        try
+        {
+            var rule = await taxRuleRepository.GetByCityAndYearAsync(
+                request.CityId,
+                request.Year,
+                cancellationToken
             );
 
-        var vehicle = new Vehicle(request.VehicleRegistration, request.VehicleType);
+            if (rule is null)
+            {
+                logger.LogWarning(
+                    "No tax rule found for CityId: {CityId}, Year: {Year}",
+                    request.CityId,
+                    request.Year
+                );
+                throw new InvalidOperationException(
+                    $"No tax rule found for city {request.CityId} and year {request.Year}"
+                );
+            }
 
-        var totalTax = taxCalculator.Calculate(rule, vehicle, request.Timestamps);
+            var vehicle = new Vehicle(request.VehicleRegistration, request.VehicleType);
 
-        return new CalculateTaxResult(totalTax.Value);
+            var totalTax = taxCalculator.Calculate(rule, vehicle, request.Timestamps);
+
+            logger.LogInformation(
+                "Tax calculated successfully. CityId: {CityId}, Year: {Year}, TotalTax: {TotalTax}",
+                request.CityId,
+                request.Year,
+                totalTax.Value
+            );
+
+            return new CalculateTaxResult(totalTax.Value);
+        }
+        catch (Exception ex) when (ex is not InvalidOperationException)
+        {
+            logger.LogError(
+                ex,
+                "Error calculating tax for CityId: {CityId}, Year: {Year}",
+                request.CityId,
+                request.Year
+            );
+            throw;
+        }
     }
 }

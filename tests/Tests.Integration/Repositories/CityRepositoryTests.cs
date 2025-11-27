@@ -1,6 +1,7 @@
 using Domain.Entities;
 using FluentAssertions;
 using Infrastructure.Repositories;
+using Microsoft.Extensions.Logging.Abstractions;
 using Tests.Integration.TestHelpers;
 
 namespace Tests.Integration.Repositories;
@@ -19,7 +20,7 @@ public class CityRepositoryTests : IDisposable
     {
         // Arrange
         await using var context = _fixture.CreateContext();
-        var repository = new CityRepository(context);
+        var repository = new CityRepository(context, NullLogger<CityRepository>.Instance);
         var city = TestDataBuilder.CreateTestCity("Gothenburg");
 
         // Act
@@ -41,7 +42,7 @@ public class CityRepositoryTests : IDisposable
     {
         // Arrange
         await using var context = _fixture.CreateContext();
-        var repository = new CityRepository(context);
+        var repository = new CityRepository(context, NullLogger<CityRepository>.Instance);
         var city = TestDataBuilder.CreateTestCity("Stockholm");
         await repository.AddAsync(city);
 
@@ -59,7 +60,7 @@ public class CityRepositoryTests : IDisposable
     {
         // Arrange
         await using var context = _fixture.CreateContext();
-        var repository = new CityRepository(context);
+        var repository = new CityRepository(context, NullLogger<CityRepository>.Instance);
         var nonExistingId = Guid.NewGuid();
 
         // Act
@@ -74,7 +75,7 @@ public class CityRepositoryTests : IDisposable
     {
         // Arrange
         await using var context = _fixture.CreateContext();
-        var repository = new CityRepository(context);
+        var repository = new CityRepository(context, NullLogger<CityRepository>.Instance);
         var city1 = TestDataBuilder.CreateCityWithRules("Gothenburg", 2013);
         var city2 = TestDataBuilder.CreateCityWithRules("Stockholm", 2014);
         await repository.AddAsync(city1);
@@ -98,7 +99,7 @@ public class CityRepositoryTests : IDisposable
     {
         // Arrange
         await using var context = _fixture.CreateContext();
-        var repository = new CityRepository(context);
+        var repository = new CityRepository(context, NullLogger<CityRepository>.Instance);
         var city = TestDataBuilder.CreateTestCity("Malmö");
         await repository.AddAsync(city);
 
@@ -115,7 +116,7 @@ public class CityRepositoryTests : IDisposable
     {
         // Arrange
         await using var context = _fixture.CreateContext();
-        var repository = new CityRepository(context);
+        var repository = new CityRepository(context, NullLogger<CityRepository>.Instance);
 
         // Act
         var result = await repository.GetByNameAsync("NonExisting");
@@ -129,7 +130,7 @@ public class CityRepositoryTests : IDisposable
     {
         // Arrange
         await using var context = _fixture.CreateContext();
-        var repository = new CityRepository(context);
+        var repository = new CityRepository(context, NullLogger<CityRepository>.Instance);
         var city = TestDataBuilder.CreateCityWithRules("Gothenburg", 2013, 2014);
         await repository.AddAsync(city);
 
@@ -148,7 +149,7 @@ public class CityRepositoryTests : IDisposable
     {
         // Arrange
         await using var context = _fixture.CreateContext();
-        var repository = new CityRepository(context);
+        var repository = new CityRepository(context, NullLogger<CityRepository>.Instance);
         var city = TestDataBuilder.CreateCityWithRules("Gothenburg", 2013);
         await repository.AddAsync(city);
         var ruleId = city.TaxRules.First().Id;
@@ -173,7 +174,7 @@ public class CityRepositoryTests : IDisposable
     {
         // Arrange
         await using var context = _fixture.CreateContext();
-        var repository = new CityRepository(context);
+        var repository = new CityRepository(context, NullLogger<CityRepository>.Instance);
         var city = TestDataBuilder.CreateCityWithRules("TestCity", 2013, 2014);
 
         // Act
@@ -193,7 +194,7 @@ public class CityRepositoryTests : IDisposable
     {
         // Arrange
         await using var context = _fixture.CreateContext();
-        var repository = new CityRepository(context);
+        var repository = new CityRepository(context, NullLogger<CityRepository>.Instance);
         var city = TestDataBuilder.CreateTestCity("ToDelete");
         await repository.AddAsync(city);
 
@@ -210,7 +211,7 @@ public class CityRepositoryTests : IDisposable
     {
         // Arrange
         await using var context = _fixture.CreateContext();
-        var repository = new CityRepository(context);
+        var repository = new CityRepository(context, NullLogger<CityRepository>.Instance);
         var city = TestDataBuilder.CreateTestCity("Exists");
         await repository.AddAsync(city);
 
@@ -226,7 +227,7 @@ public class CityRepositoryTests : IDisposable
     {
         // Arrange
         await using var context = _fixture.CreateContext();
-        var repository = new CityRepository(context);
+        var repository = new CityRepository(context, NullLogger<CityRepository>.Instance);
 
         // Act
         var result = await repository.ExistsAsync(Guid.NewGuid());
@@ -240,7 +241,7 @@ public class CityRepositoryTests : IDisposable
     {
         // Arrange
         await using var context = _fixture.CreateContext();
-        var repository = new CityRepository(context);
+        var repository = new CityRepository(context, NullLogger<CityRepository>.Instance);
         var city = TestDataBuilder.CreateTestCity("Stockholm");
         await repository.AddAsync(city);
 
@@ -267,7 +268,7 @@ public class CityRepositoryTests : IDisposable
     {
         // Arrange
         await using var context = _fixture.CreateContext();
-        var repository = new CityRepository(context);
+        var repository = new CityRepository(context, NullLogger<CityRepository>.Instance);
         var city = TestDataBuilder.CreateTestCity("OldName");
         await repository.AddAsync(city);
 

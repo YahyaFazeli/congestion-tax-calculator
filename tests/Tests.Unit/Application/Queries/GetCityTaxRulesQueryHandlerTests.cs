@@ -3,6 +3,7 @@ using Domain.Entities;
 using Domain.Interfaces;
 using Domain.ValueObjects;
 using FluentAssertions;
+using Microsoft.Extensions.Logging;
 using Moq;
 
 namespace Tests.Unit.Application.Queries;
@@ -10,12 +11,14 @@ namespace Tests.Unit.Application.Queries;
 public class GetCityTaxRulesQueryHandlerTests
 {
     private readonly Mock<ICityRepository> _mockRepository;
+    private readonly Mock<ILogger<GetCityTaxRulesQueryHandler>> _mockLogger;
     private readonly GetCityTaxRulesQueryHandler _handler;
 
     public GetCityTaxRulesQueryHandlerTests()
     {
         _mockRepository = new Mock<ICityRepository>();
-        _handler = new GetCityTaxRulesQueryHandler(_mockRepository.Object);
+        _mockLogger = new Mock<ILogger<GetCityTaxRulesQueryHandler>>();
+        _handler = new GetCityTaxRulesQueryHandler(_mockRepository.Object, _mockLogger.Object);
     }
 
     [Fact]

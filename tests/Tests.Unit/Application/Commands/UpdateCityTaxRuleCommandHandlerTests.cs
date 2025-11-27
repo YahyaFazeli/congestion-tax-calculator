@@ -3,6 +3,7 @@ using Domain.Entities;
 using Domain.Enums;
 using Domain.Interfaces;
 using FluentAssertions;
+using Microsoft.Extensions.Logging;
 using Moq;
 
 namespace Tests.Unit.Application.Commands;
@@ -10,12 +11,14 @@ namespace Tests.Unit.Application.Commands;
 public class UpdateCityTaxRuleCommandHandlerTests
 {
     private readonly Mock<ITaxRuleRepository> _mockRepository;
+    private readonly Mock<ILogger<UpdateCityTaxRuleCommandHandler>> _mockLogger;
     private readonly UpdateCityTaxRuleCommandHandler _handler;
 
     public UpdateCityTaxRuleCommandHandlerTests()
     {
         _mockRepository = new Mock<ITaxRuleRepository>();
-        _handler = new UpdateCityTaxRuleCommandHandler(_mockRepository.Object);
+        _mockLogger = new Mock<ILogger<UpdateCityTaxRuleCommandHandler>>();
+        _handler = new UpdateCityTaxRuleCommandHandler(_mockRepository.Object, _mockLogger.Object);
     }
 
     [Fact]

@@ -11,11 +11,14 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:8080
       - ConnectionStrings__CongestionTaxDb=Host=postgres;Port=5432;Database=CongestionTaxDb;Username=postgres;Password=YourStrong@Passw0rd
+      - Serilog__WriteTo__1__Args__serverUrl=http://seq:80
     volumes:
       - ~/.aspnet/https:/https:ro
     depends_on:
       postgres:
         condition: service_healthy
+      seq:
+        condition: service_started
     networks:
       - congestion-tax-network
 
@@ -38,8 +41,20 @@ services:
     networks:
       - congestion-tax-network
 
+  seq:
+    image: datalust/seq:latest
+    environment:
+      - ACCEPT_EULA=Y
+    ports:
+      - "5341:80"
+    volumes:
+      - seq-data:/data
+    networks:
+      - congestion-tax-network
+
 volumes:
   postgres-data:
+  seq-data:
 
 networks:
   congestion-tax-network:

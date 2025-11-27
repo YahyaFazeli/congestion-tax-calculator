@@ -2,10 +2,11 @@ using Domain.Entities;
 using Domain.Interfaces;
 using Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace Infrastructure.Repositories;
 
-public class CityRepository(CongestionTaxDbContext context)
+public class CityRepository(CongestionTaxDbContext context, ILogger<CityRepository> logger)
     : Repository<City>(context),
         ICityRepository
 {
@@ -13,7 +14,13 @@ public class CityRepository(CongestionTaxDbContext context)
         CancellationToken cancellationToken = default
     )
     {
-        return await _dbSet.Include(c => c.TaxRules).ToListAsync(cancellationToken);
+        logger.LogDebug("Fetching all cities");
+
+        var result = await _dbSet.Include(c => c.TaxRules).ToListAsync(cancellationToken);
+
+        logger.LogDebug("All cities query completed. Count: {Count}", result.Count);
+
+        return result;
     }
 
     public async Task<City?> GetByNameAsync(
@@ -21,7 +28,13 @@ public class CityRepository(CongestionTaxDbContext context)
         CancellationToken cancellationToken = default
     )
     {
-        return await _dbSet.FirstOrDefaultAsync(c => c.Name == name, cancellationToken);
+        logger.LogDebug("Fetching city by name: {CityName}", name);
+
+        var result = await _dbSet.FirstOrDefaultAsync(c => c.Name == name, cancellationToken);
+
+        logger.LogDebug("City by name query completed. Found: {Found}", result != null);
+
+        return result;
     }
 
     public async Task<City?> GetByIdWithRulesAsync(
@@ -29,10 +42,16 @@ public class CityRepository(CongestionTaxDbContext context)
         CancellationToken cancellationToken = default
     )
     {
-        return await _dbSet
+        logger.LogDebug("Fetching city with rules. CityId: {CityId}", id);
+
+        var result = await _dbSet
             .Include(c => c.TaxRules)
             .Where(c => c.Id == id)
             .FirstOrDefaultAsync(cancellationToken);
+
+        logger.LogDebug("City with rules query completed. Found: {Found}", result != null);
+
+        return result;
     }
 
     public async Task<City?> GetByIdWithDetailedRulesAsync(
@@ -41,7 +60,13 @@ public class CityRepository(CongestionTaxDbContext context)
         CancellationToken cancellationToken = default
     )
     {
-        return await _dbSet
+        logger.LogDebug(
+            "Fetching city with detailed rules. CityId: {CityId}, RuleId: {RuleId}",
+            id,
+            ruleId
+        );
+
+        var result = await _dbSet
             .Include(c => c.TaxRules)
                 .ThenInclude(r => r.Intervals)
             .Include(c => c.TaxRules)
@@ -54,6 +79,10 @@ public class CityRepository(CongestionTaxDbContext context)
                 .ThenInclude(r => r.TollFreeVehicles)
             .Where(c => c.Id == id && c.TaxRules.Any(d => d.Id == ruleId))
             .FirstOrDefaultAsync(cancellationToken);
+
+        logger.LogDebug("City with detailed rules query completed. Found: {Found}", result != null);
+
+        return result;
     }
 
     public async Task<TaxRule> AddTaxRuleAsync(
@@ -61,8 +90,30 @@ public class CityRepository(CongestionTaxDbContext context)
         CancellationToken cancellationToken = default
     )
     {
-        await _context.TaxRules.AddAsync(taxRule, cancellationToken);
-        await _context.SaveChangesAsync(cancellationToken);
-        return taxRule;
+        logger.LogDebug(
+            "Adding tax rule. RuleId: {RuleId}, CityId: {CityId}",
+            taxRule.Id,
+            taxRule.CityId
+        );
+
+        try
+        {
+            await _context.TaxRules.AddAsync(taxRule, cancellationToken);
+            await _context.SaveChangesAsync(cancellationToken);
+
+            logger.LogDebug("Add tax rule operation completed");
+
+            return taxRule;
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(
+                ex,
+                "Error adding tax rule. RuleId: {RuleId}, CityId: {CityId}",
+                taxRule.Id,
+                taxRule.CityId
+            );
+            throw;
+        }
     }
 }

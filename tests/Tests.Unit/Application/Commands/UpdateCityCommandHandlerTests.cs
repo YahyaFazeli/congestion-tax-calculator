@@ -2,6 +2,7 @@ using Application.Commands.UpdateCity;
 using Domain.Entities;
 using Domain.Interfaces;
 using FluentAssertions;
+using Microsoft.Extensions.Logging;
 using Moq;
 
 namespace Tests.Unit.Application.Commands;
@@ -9,12 +10,14 @@ namespace Tests.Unit.Application.Commands;
 public class UpdateCityCommandHandlerTests
 {
     private readonly Mock<ICityRepository> _mockRepository;
+    private readonly Mock<ILogger<UpdateCityCommandHandler>> _mockLogger;
     private readonly UpdateCityCommandHandler _handler;
 
     public UpdateCityCommandHandlerTests()
     {
         _mockRepository = new Mock<ICityRepository>();
-        _handler = new UpdateCityCommandHandler(_mockRepository.Object);
+        _mockLogger = new Mock<ILogger<UpdateCityCommandHandler>>();
+        _handler = new UpdateCityCommandHandler(_mockRepository.Object, _mockLogger.Object);
     }
 
     [Fact]
