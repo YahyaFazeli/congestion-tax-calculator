@@ -1,3 +1,4 @@
+using Application.Behaviors;
 using Domain.Services;
 using FluentValidation;
 using MediatR;

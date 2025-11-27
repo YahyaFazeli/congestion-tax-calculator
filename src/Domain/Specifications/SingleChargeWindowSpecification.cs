@@ -1,10 +1,5 @@
 namespace Domain.Specifications;
 
-/// <summary>
-/// Specification that determines if two timestamps fall within the same charge window.
-/// Used for the "single charge rule" where multiple passages within a time window
-/// are charged as one.
-/// </summary>
 public class SingleChargeWindowSpecification : ISpecification<(DateTime first, DateTime second)>
 {
     private readonly int _windowMinutes;

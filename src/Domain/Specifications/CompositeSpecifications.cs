@@ -1,8 +1,5 @@
 namespace Domain.Specifications;
 
-/// <summary>
-/// Combines two specifications with logical AND.
-/// </summary>
 public class AndSpecification<T> : ISpecification<T>
 {
     private readonly ISpecification<T> _left;
@@ -20,9 +17,6 @@ public class AndSpecification<T> : ISpecification<T>
     }
 }
 
-/// <summary>
-/// Combines two specifications with logical OR.
-/// </summary>
 public class OrSpecification<T> : ISpecification<T>
 {
     private readonly ISpecification<T> _left;
@@ -40,9 +34,6 @@ public class OrSpecification<T> : ISpecification<T>
     }
 }
 
-/// <summary>
-/// Negates a specification with logical NOT.
-/// </summary>
 public class NotSpecification<T> : ISpecification<T>
 {
     private readonly ISpecification<T> _spec;
@@ -58,9 +49,6 @@ public class NotSpecification<T> : ISpecification<T>
     }
 }
 
-/// <summary>
-/// Extension methods for fluent specification composition.
-/// </summary>
 public static class SpecificationExtensions
 {
     public static ISpecification<T> And<T>(this ISpecification<T> left, ISpecification<T> right)

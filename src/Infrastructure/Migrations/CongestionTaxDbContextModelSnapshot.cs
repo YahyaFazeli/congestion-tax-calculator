@@ -35,6 +35,9 @@ namespace Infrastructure.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("Name")
+                        .IsUnique();
+
                     b.ToTable("Cities");
                 });
 
@@ -164,6 +167,8 @@ namespace Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("TaxRuleId");
+
+                    b.HasIndex("Start", "End");
 
                     b.ToTable("TollIntervals");
                 });

@@ -138,6 +138,12 @@ namespace Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateIndex(
+                name: "IX_Cities_Name",
+                table: "Cities",
+                column: "Name",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "IX_TaxRules_CityId_Year",
                 table: "TaxRules",
                 columns: new[] { "CityId", "Year" },
@@ -162,6 +168,11 @@ namespace Infrastructure.Migrations
                 name: "IX_TollFreeWeekdays_TaxRuleId",
                 table: "TollFreeWeekdays",
                 column: "TaxRuleId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_TollIntervals_Start_End",
+                table: "TollIntervals",
+                columns: new[] { "Start", "End" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_TollIntervals_TaxRuleId",
