@@ -11,5 +11,7 @@ public class CityConfiguration : IEntityTypeConfiguration<City>
         builder.Property(c => c.Name).HasMaxLength(200);
 
         builder.Navigation(c => c.TaxRules).UsePropertyAccessMode(PropertyAccessMode.Field);
+
+        builder.HasIndex(c => c.Name).IsUnique();
     }
 }

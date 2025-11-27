@@ -11,5 +11,7 @@ public class TollIntervalConfiguration : IEntityTypeConfiguration<TollInterval>
         builder
             .Property(ti => ti.Amount)
             .HasConversion(m => m.Value, v => new Domain.ValueObjects.Money(v));
+
+        builder.HasIndex(ti => new { ti.Start, ti.End });
     }
 }
