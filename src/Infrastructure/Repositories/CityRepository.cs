@@ -60,7 +60,11 @@ public class CityRepository(CongestionTaxDbContext context, ILogger<CityReposito
         CancellationToken cancellationToken = default
     )
     {
-        logger.LogDebug("Fetching city with detailed rules. CityId: {CityId}, RuleId: {RuleId}", id, ruleId);
+        logger.LogDebug(
+            "Fetching city with detailed rules. CityId: {CityId}, RuleId: {RuleId}",
+            id,
+            ruleId
+        );
 
         var result = await _dbSet
             .Include(c => c.TaxRules)
@@ -86,12 +90,15 @@ public class CityRepository(CongestionTaxDbContext context, ILogger<CityReposito
         CancellationToken cancellationToken = default
     )
     {
-        logger.LogDebug("Adding tax rule. RuleId: {RuleId}, CityId: {CityId}", taxRule.Id, taxRule.CityId);
+        logger.LogDebug(
+            "Adding tax rule. RuleId: {RuleId}, CityId: {CityId}",
+            taxRule.Id,
+            taxRule.CityId
+        );
 
         try
         {
             await _context.TaxRules.AddAsync(taxRule, cancellationToken);
-            await _context.SaveChangesAsync(cancellationToken);
 
             logger.LogDebug("Add tax rule operation completed");
 

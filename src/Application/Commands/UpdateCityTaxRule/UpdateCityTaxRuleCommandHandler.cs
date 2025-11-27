@@ -98,6 +98,7 @@ public sealed class UpdateCityTaxRuleCommandHandler(
         );
 
         await taxRuleRepository.ReplaceRuleAsync(request.RuleId, updatedRule, cancellationToken);
+        await taxRuleRepository.SaveChangesAsync(cancellationToken);
 
         logger.LogInformation(
             "Tax rule updated successfully. RuleId: {RuleId}, CityId: {CityId}, Year: {Year}",

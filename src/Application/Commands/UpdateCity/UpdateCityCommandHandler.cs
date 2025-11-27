@@ -47,6 +47,7 @@ public sealed class UpdateCityCommandHandler(
         city.UpdateName(request.Name);
 
         await cityRepository.UpdateAsync(city, cancellationToken);
+        await cityRepository.SaveChangesAsync(cancellationToken);
 
         logger.LogInformation(
             "City updated successfully. CityId: {CityId}, Name: {CityName}",

@@ -25,6 +25,7 @@ public sealed class CreateCityCommandHandler(
         var city = City.Create(request.Name);
 
         await cityRepository.AddAsync(city, cancellationToken);
+        await cityRepository.SaveChangesAsync(cancellationToken);
 
         logger.LogInformation(
             "City created successfully. CityId: {CityId}, Name: {CityName}",

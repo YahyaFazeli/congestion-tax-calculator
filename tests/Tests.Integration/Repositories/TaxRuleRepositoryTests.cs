@@ -21,10 +21,14 @@ public class TaxRuleRepositoryTests : IDisposable
         // Arrange
         await using var context = _fixture.CreateContext();
         var cityRepository = new CityRepository(context, NullLogger<CityRepository>.Instance);
-        var taxRuleRepository = new TaxRuleRepository(context, NullLogger<TaxRuleRepository>.Instance);
+        var taxRuleRepository = new TaxRuleRepository(
+            context,
+            NullLogger<TaxRuleRepository>.Instance
+        );
 
         var city = TestDataBuilder.CreateCityWithRules("Gothenburg", 2013);
         await cityRepository.AddAsync(city);
+        await cityRepository.SaveChangesAsync();
 
         // Act
         var result = await taxRuleRepository.GetByCityAndYearAsync(city.Id, 2013);
@@ -46,10 +50,14 @@ public class TaxRuleRepositoryTests : IDisposable
         // Arrange
         await using var context = _fixture.CreateContext();
         var cityRepository = new CityRepository(context, NullLogger<CityRepository>.Instance);
-        var taxRuleRepository = new TaxRuleRepository(context, NullLogger<TaxRuleRepository>.Instance);
+        var taxRuleRepository = new TaxRuleRepository(
+            context,
+            NullLogger<TaxRuleRepository>.Instance
+        );
 
         var city = TestDataBuilder.CreateCityWithRules("Gothenburg", 2013);
         await cityRepository.AddAsync(city);
+        await cityRepository.SaveChangesAsync();
 
         // Act
         var result = await taxRuleRepository.GetByCityAndYearAsync(city.Id, 2014);
@@ -63,7 +71,10 @@ public class TaxRuleRepositoryTests : IDisposable
     {
         // Arrange
         await using var context = _fixture.CreateContext();
-        var taxRuleRepository = new TaxRuleRepository(context, NullLogger<TaxRuleRepository>.Instance);
+        var taxRuleRepository = new TaxRuleRepository(
+            context,
+            NullLogger<TaxRuleRepository>.Instance
+        );
 
         // Act
         var result = await taxRuleRepository.GetByCityAndYearAsync(Guid.NewGuid(), 2013);
@@ -78,10 +89,14 @@ public class TaxRuleRepositoryTests : IDisposable
         // Arrange
         await using var context = _fixture.CreateContext();
         var cityRepository = new CityRepository(context, NullLogger<CityRepository>.Instance);
-        var taxRuleRepository = new TaxRuleRepository(context, NullLogger<TaxRuleRepository>.Instance);
+        var taxRuleRepository = new TaxRuleRepository(
+            context,
+            NullLogger<TaxRuleRepository>.Instance
+        );
 
         var city = TestDataBuilder.CreateCityWithRules("Gothenburg", 2013, 2014, 2015);
         await cityRepository.AddAsync(city);
+        await cityRepository.SaveChangesAsync();
 
         // Act
         var result = await taxRuleRepository.GetByCityIdAsync(city.Id);
@@ -108,7 +123,10 @@ public class TaxRuleRepositoryTests : IDisposable
     {
         // Arrange
         await using var context = _fixture.CreateContext();
-        var taxRuleRepository = new TaxRuleRepository(context, NullLogger<TaxRuleRepository>.Instance);
+        var taxRuleRepository = new TaxRuleRepository(
+            context,
+            NullLogger<TaxRuleRepository>.Instance
+        );
 
         // Act
         var result = await taxRuleRepository.GetByCityIdAsync(Guid.NewGuid());
@@ -123,10 +141,14 @@ public class TaxRuleRepositoryTests : IDisposable
         // Arrange
         await using var context = _fixture.CreateContext();
         var cityRepository = new CityRepository(context, NullLogger<CityRepository>.Instance);
-        var taxRuleRepository = new TaxRuleRepository(context, NullLogger<TaxRuleRepository>.Instance);
+        var taxRuleRepository = new TaxRuleRepository(
+            context,
+            NullLogger<TaxRuleRepository>.Instance
+        );
 
         var city = TestDataBuilder.CreateCityWithRules("Gothenburg", 2013);
         await cityRepository.AddAsync(city);
+        await cityRepository.SaveChangesAsync();
         var ruleId = city.TaxRules.First().Id;
 
         // Act
@@ -147,7 +169,10 @@ public class TaxRuleRepositoryTests : IDisposable
     {
         // Arrange
         await using var context = _fixture.CreateContext();
-        var taxRuleRepository = new TaxRuleRepository(context, NullLogger<TaxRuleRepository>.Instance);
+        var taxRuleRepository = new TaxRuleRepository(
+            context,
+            NullLogger<TaxRuleRepository>.Instance
+        );
 
         // Act
         var result = await taxRuleRepository.GetByIdWithAllRelationsAsync(Guid.NewGuid());
@@ -162,12 +187,16 @@ public class TaxRuleRepositoryTests : IDisposable
         // Arrange
         await using var context = _fixture.CreateContext();
         var cityRepository = new CityRepository(context, NullLogger<CityRepository>.Instance);
-        var taxRuleRepository = new TaxRuleRepository(context, NullLogger<TaxRuleRepository>.Instance);
+        var taxRuleRepository = new TaxRuleRepository(
+            context,
+            NullLogger<TaxRuleRepository>.Instance
+        );
 
         var city1 = TestDataBuilder.CreateCityWithRules("Gothenburg", 2013, 2014);
         var city2 = TestDataBuilder.CreateCityWithRules("Stockholm", 2013);
         await cityRepository.AddAsync(city1);
         await cityRepository.AddAsync(city2);
+        await cityRepository.SaveChangesAsync();
 
         // Act
         var result = await taxRuleRepository.GetAllAsync();
@@ -192,10 +221,14 @@ public class TaxRuleRepositoryTests : IDisposable
         // Arrange
         await using var context = _fixture.CreateContext();
         var cityRepository = new CityRepository(context, NullLogger<CityRepository>.Instance);
-        var taxRuleRepository = new TaxRuleRepository(context, NullLogger<TaxRuleRepository>.Instance);
+        var taxRuleRepository = new TaxRuleRepository(
+            context,
+            NullLogger<TaxRuleRepository>.Instance
+        );
 
         var city = TestDataBuilder.CreateCityWithRules("Gothenburg", 2013);
         await cityRepository.AddAsync(city);
+        await cityRepository.SaveChangesAsync();
         var ruleId = city.TaxRules.First().Id;
 
         // Act
@@ -212,10 +245,14 @@ public class TaxRuleRepositoryTests : IDisposable
         // Arrange
         await using var context = _fixture.CreateContext();
         var cityRepository = new CityRepository(context, NullLogger<CityRepository>.Instance);
-        var taxRuleRepository = new TaxRuleRepository(context, NullLogger<TaxRuleRepository>.Instance);
+        var taxRuleRepository = new TaxRuleRepository(
+            context,
+            NullLogger<TaxRuleRepository>.Instance
+        );
 
         var city = TestDataBuilder.CreateCityWithRules("Gothenburg", 2013);
         await cityRepository.AddAsync(city);
+        await cityRepository.SaveChangesAsync();
         var ruleId = city.TaxRules.First().Id;
 
         // Act
@@ -230,7 +267,10 @@ public class TaxRuleRepositoryTests : IDisposable
     {
         // Arrange
         await using var context = _fixture.CreateContext();
-        var taxRuleRepository = new TaxRuleRepository(context, NullLogger<TaxRuleRepository>.Instance);
+        var taxRuleRepository = new TaxRuleRepository(
+            context,
+            NullLogger<TaxRuleRepository>.Instance
+        );
 
         // Act
         var result = await taxRuleRepository.ExistsAsync(Guid.NewGuid());
@@ -245,16 +285,21 @@ public class TaxRuleRepositoryTests : IDisposable
         // Arrange
         await using var context = _fixture.CreateContext();
         var cityRepository = new CityRepository(context, NullLogger<CityRepository>.Instance);
-        var taxRuleRepository = new TaxRuleRepository(context, NullLogger<TaxRuleRepository>.Instance);
+        var taxRuleRepository = new TaxRuleRepository(
+            context,
+            NullLogger<TaxRuleRepository>.Instance
+        );
 
         var city = TestDataBuilder.CreateCityWithRules("Gothenburg", 2013);
         await cityRepository.AddAsync(city);
+        await cityRepository.SaveChangesAsync();
         var oldRuleId = city.TaxRules.First().Id;
 
         var newRule = TestDataBuilder.CreateTestRule(city.Id, 2014);
 
         // Act
         await taxRuleRepository.ReplaceRuleAsync(oldRuleId, newRule);
+        await taxRuleRepository.SaveChangesAsync();
 
         // Assert
         context.ChangeTracker.Clear();
@@ -275,16 +320,21 @@ public class TaxRuleRepositoryTests : IDisposable
         // Arrange
         await using var context = _fixture.CreateContext();
         var cityRepository = new CityRepository(context, NullLogger<CityRepository>.Instance);
-        var taxRuleRepository = new TaxRuleRepository(context, NullLogger<TaxRuleRepository>.Instance);
+        var taxRuleRepository = new TaxRuleRepository(
+            context,
+            NullLogger<TaxRuleRepository>.Instance
+        );
 
         var city = TestDataBuilder.CreateTestCity("Gothenburg");
         await cityRepository.AddAsync(city);
+        await cityRepository.SaveChangesAsync();
 
         var newRule = TestDataBuilder.CreateTestRule(city.Id, 2024);
         var nonExistingRuleId = Guid.NewGuid();
 
         // Act
         await taxRuleRepository.ReplaceRuleAsync(nonExistingRuleId, newRule);
+        await taxRuleRepository.SaveChangesAsync();
 
         // Assert
         context.ChangeTracker.Clear();
@@ -299,10 +349,14 @@ public class TaxRuleRepositoryTests : IDisposable
         // Arrange
         await using var context = _fixture.CreateContext();
         var cityRepository = new CityRepository(context, NullLogger<CityRepository>.Instance);
-        var taxRuleRepository = new TaxRuleRepository(context, NullLogger<TaxRuleRepository>.Instance);
+        var taxRuleRepository = new TaxRuleRepository(
+            context,
+            NullLogger<TaxRuleRepository>.Instance
+        );
 
         var city = TestDataBuilder.CreateCityWithRules("Gothenburg", 2013);
         await cityRepository.AddAsync(city);
+        await cityRepository.SaveChangesAsync();
         var oldRuleId = city.TaxRules.First().Id;
 
         var oldRule = await taxRuleRepository.GetByIdWithAllRelationsAsync(oldRuleId);
@@ -312,6 +366,7 @@ public class TaxRuleRepositoryTests : IDisposable
 
         // Act
         await taxRuleRepository.ReplaceRuleAsync(oldRuleId, newRule);
+        await taxRuleRepository.SaveChangesAsync();
 
         // Assert
         context.ChangeTracker.Clear();

@@ -17,7 +17,11 @@ public sealed class AddCityTaxRuleCommandHandler(
         CancellationToken cancellationToken
     )
     {
-        logger.LogInformation("Adding tax rule for CityId: {CityId}, Year: {Year}", request.CityId, request.Year);
+        logger.LogInformation(
+            "Adding tax rule for CityId: {CityId}, Year: {Year}",
+            request.CityId,
+            request.Year
+        );
 
         var city = await cityRepository.GetByIdWithRulesAsync(request.CityId, cancellationToken);
 
@@ -68,6 +72,7 @@ public sealed class AddCityTaxRuleCommandHandler(
         );
 
         await cityRepository.AddTaxRuleAsync(taxRule, cancellationToken);
+        await cityRepository.SaveChangesAsync(cancellationToken);
 
         logger.LogInformation(
             "Tax rule added successfully. RuleId: {RuleId}, CityId: {CityId}, Year: {Year}",
