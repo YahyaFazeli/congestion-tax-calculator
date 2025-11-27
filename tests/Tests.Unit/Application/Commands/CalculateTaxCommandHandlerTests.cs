@@ -465,6 +465,17 @@ public class CalculateTaxCommandHandlerTests
 
     private static TaxRule CreateTestRule(Guid cityId, int year)
     {
-        return TaxRule.Create(cityId, year, new Money(60), 60, [], [], [], [], []);
+        var intervals = new[]
+        {
+            TollInterval.Create(new TimeOnly(6, 0), new TimeOnly(6, 29), new Money(8)),
+            TollInterval.Create(new TimeOnly(6, 30), new TimeOnly(6, 59), new Money(13)),
+            TollInterval.Create(new TimeOnly(7, 0), new TimeOnly(7, 59), new Money(18)),
+            TollInterval.Create(new TimeOnly(8, 0), new TimeOnly(8, 29), new Money(13)),
+            TollInterval.Create(new TimeOnly(15, 0), new TimeOnly(15, 29), new Money(13)),
+            TollInterval.Create(new TimeOnly(15, 30), new TimeOnly(16, 59), new Money(18)),
+            TollInterval.Create(new TimeOnly(17, 0), new TimeOnly(17, 59), new Money(13)),
+            TollInterval.Create(new TimeOnly(18, 0), new TimeOnly(18, 29), new Money(8)),
+        };
+        return TaxRule.Create(cityId, year, new Money(60), 60, intervals, [], [], [], []);
     }
 }

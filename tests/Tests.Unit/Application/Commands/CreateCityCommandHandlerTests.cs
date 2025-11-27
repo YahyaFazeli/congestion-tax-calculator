@@ -104,12 +104,12 @@ public class CreateCityCommandHandlerTests
         var command = new CreateCityCommand(cityName);
 
         // Act
-        Func<Task> act = async () => await _handler.Handle(command, CancellationToken.None);
+        var result = await _handler.Handle(command, CancellationToken.None);
 
         // Assert
-        await act.Should()
-            .ThrowAsync<InvalidOperationException>()
-            .WithMessage($"City with name '{cityName}' already exists");
+        result.IsFailure.Should().BeTrue();
+        result.Error.Code.Should().Be("City.AlreadyExists");
+        result.Error.Message.Should().Contain(cityName);
     }
 
     [Fact]

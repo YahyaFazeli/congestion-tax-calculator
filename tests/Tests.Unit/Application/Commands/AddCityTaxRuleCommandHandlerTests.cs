@@ -4,6 +4,7 @@ using Domain.Entities;
 using Domain.Enums;
 using Domain.Exceptions;
 using Domain.Interfaces;
+using Domain.ValueObjects;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -75,7 +76,7 @@ public class AddCityTaxRuleCommandHandlerTests
             2024,
             60m,
             60,
-            Array.Empty<TollIntervalDto>(),
+            new[] { new TollIntervalDto("06:00", "06:29", 8m) },
             Array.Empty<TollFreeDateDto>(),
             Array.Empty<Month>(),
             Array.Empty<DayOfWeek>(),
@@ -83,14 +84,12 @@ public class AddCityTaxRuleCommandHandlerTests
         );
 
         // Act
-        Func<Task> act = async () => await _handler.Handle(command, CancellationToken.None);
+        var result = await _handler.Handle(command, CancellationToken.None);
 
         // Assert
-        var exception = await act.Should()
-            .ThrowAsync<CityNotFoundException>()
-            .WithMessage($"City with ID {cityId} not found");
-
-        exception.Which.CityId.Should().Be(cityId);
+        result.IsFailure.Should().BeTrue();
+        result.Error.Code.Should().Be("City.NotFound");
+        result.Error.Message.Should().Contain(cityId.ToString());
     }
 
     [Fact]
@@ -100,7 +99,11 @@ public class AddCityTaxRuleCommandHandlerTests
         var cityId = Guid.NewGuid();
         var year = 2024;
         var city = new City(cityId, "Stockholm");
-        var existingRule = TaxRule.Create(cityId, year, new(60), 60, [], [], [], [], []);
+        var intervals = new[]
+        {
+            TollInterval.Create(new TimeOnly(6, 0), new TimeOnly(6, 29), new Money(8)),
+        };
+        var existingRule = TaxRule.Create(cityId, year, new(60), 60, intervals, [], [], [], []);
         city.AddRule(existingRule);
 
         _mockRepository
@@ -112,7 +115,7 @@ public class AddCityTaxRuleCommandHandlerTests
             year,
             60m,
             60,
-            Array.Empty<TollIntervalDto>(),
+            new[] { new TollIntervalDto("06:00", "06:29", 8m) },
             Array.Empty<TollFreeDateDto>(),
             Array.Empty<Month>(),
             Array.Empty<DayOfWeek>(),
@@ -120,12 +123,12 @@ public class AddCityTaxRuleCommandHandlerTests
         );
 
         // Act
-        Func<Task> act = async () => await _handler.Handle(command, CancellationToken.None);
+        var result = await _handler.Handle(command, CancellationToken.None);
 
         // Assert
-        await act.Should()
-            .ThrowAsync<ValidationException>()
-            .WithMessage($"Tax rule for year {year} already exists for city 'Stockholm'");
+        result.IsFailure.Should().BeTrue();
+        result.Error.Code.Should().Be("TaxRule.AlreadyExists");
+        result.Error.Message.Should().Contain(year.ToString());
     }
 
     [Fact]
@@ -184,7 +187,7 @@ public class AddCityTaxRuleCommandHandlerTests
             2024,
             60m,
             60,
-            Array.Empty<TollIntervalDto>(),
+            new[] { new TollIntervalDto("06:00", "06:29", 8m) },
             Array.Empty<TollFreeDateDto>(),
             Array.Empty<Month>(),
             Array.Empty<DayOfWeek>(),

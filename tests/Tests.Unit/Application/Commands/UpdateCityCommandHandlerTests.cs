@@ -58,45 +58,66 @@ public class UpdateCityCommandHandlerTests
     public async Task Handle_NullName_ThrowsValidationException()
     {
         // Arrange
-        var command = new UpdateCityCommand(Guid.NewGuid(), null!);
+        var cityId = Guid.NewGuid();
+        var city = City.Create("Stockholm");
+
+        _mockRepository
+            .Setup(r => r.GetByIdAsync(cityId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(city);
+
+        var command = new UpdateCityCommand(cityId, null!);
 
         // Act
         Func<Task> act = async () => await _handler.Handle(command, CancellationToken.None);
 
         // Assert
         await act.Should()
-            .ThrowAsync<ValidationException>()
-            .WithMessage("City name cannot be null or whitespace");
+            .ThrowAsync<ArgumentException>()
+            .WithMessage("*City name cannot be null or whitespace*");
     }
 
     [Fact]
     public async Task Handle_EmptyName_ThrowsValidationException()
     {
         // Arrange
-        var command = new UpdateCityCommand(Guid.NewGuid(), "");
+        var cityId = Guid.NewGuid();
+        var city = City.Create("Stockholm");
+
+        _mockRepository
+            .Setup(r => r.GetByIdAsync(cityId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(city);
+
+        var command = new UpdateCityCommand(cityId, "");
 
         // Act
         Func<Task> act = async () => await _handler.Handle(command, CancellationToken.None);
 
         // Assert
         await act.Should()
-            .ThrowAsync<ValidationException>()
-            .WithMessage("City name cannot be null or whitespace");
+            .ThrowAsync<ArgumentException>()
+            .WithMessage("*City name cannot be null or whitespace*");
     }
 
     [Fact]
     public async Task Handle_WhitespaceName_ThrowsValidationException()
     {
         // Arrange
-        var command = new UpdateCityCommand(Guid.NewGuid(), "   ");
+        var cityId = Guid.NewGuid();
+        var city = City.Create("Stockholm");
+
+        _mockRepository
+            .Setup(r => r.GetByIdAsync(cityId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(city);
+
+        var command = new UpdateCityCommand(cityId, "   ");
 
         // Act
         Func<Task> act = async () => await _handler.Handle(command, CancellationToken.None);
 
         // Assert
         await act.Should()
-            .ThrowAsync<ValidationException>()
-            .WithMessage("City name cannot be null or whitespace");
+            .ThrowAsync<ArgumentException>()
+            .WithMessage("*City name cannot be null or whitespace*");
     }
 
     [Fact]
@@ -111,14 +132,12 @@ public class UpdateCityCommandHandlerTests
         var command = new UpdateCityCommand(cityId, "Stockholm");
 
         // Act
-        Func<Task> act = async () => await _handler.Handle(command, CancellationToken.None);
+        var result = await _handler.Handle(command, CancellationToken.None);
 
         // Assert
-        var exception = await act.Should()
-            .ThrowAsync<CityNotFoundException>()
-            .WithMessage($"City with ID {cityId} not found");
-
-        exception.Which.CityId.Should().Be(cityId);
+        result.IsFailure.Should().BeTrue();
+        result.Error.Code.Should().Be("City.NotFound");
+        result.Error.Message.Should().Contain(cityId.ToString());
     }
 
     [Fact]
@@ -141,12 +160,12 @@ public class UpdateCityCommandHandlerTests
         var command = new UpdateCityCommand(cityId, newName);
 
         // Act
-        Func<Task> act = async () => await _handler.Handle(command, CancellationToken.None);
+        var result = await _handler.Handle(command, CancellationToken.None);
 
         // Assert
-        await act.Should()
-            .ThrowAsync<ValidationException>()
-            .WithMessage($"City with name '{newName}' already exists");
+        result.IsFailure.Should().BeTrue();
+        result.Error.Code.Should().Be("City.AlreadyExists");
+        result.Error.Message.Should().Contain(newName);
     }
 
     [Fact]
