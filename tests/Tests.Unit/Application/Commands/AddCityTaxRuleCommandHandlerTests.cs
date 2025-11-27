@@ -1,4 +1,5 @@
 using Application.Commands.AddCityTaxRule;
+using Domain.Common;
 using Domain.Entities;
 using Domain.Enums;
 using Domain.Exceptions;
@@ -50,9 +51,10 @@ public class AddCityTaxRuleCommandHandlerTests
         var result = await _handler.Handle(command, CancellationToken.None);
 
         // Assert
-        result.CityId.Should().Be(cityId);
-        result.Year.Should().Be(year);
-        result.RuleId.Should().NotBeEmpty();
+        result.IsSuccess.Should().BeTrue();
+        result.Value.CityId.Should().Be(cityId);
+        result.Value.Year.Should().Be(year);
+        result.Value.RuleId.Should().NotBeEmpty();
         _mockRepository.Verify(
             r => r.AddTaxRuleAsync(It.IsAny<TaxRule>(), It.IsAny<CancellationToken>()),
             Times.Once

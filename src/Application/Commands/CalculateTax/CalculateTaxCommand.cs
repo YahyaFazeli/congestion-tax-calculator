@@ -1,3 +1,4 @@
+using Domain.Common;
 using Domain.Enums;
 using MediatR;
 
@@ -9,4 +10,4 @@ public sealed record CalculateTaxCommand(
     string VehicleRegistration,
     VehicleType VehicleType,
     IEnumerable<DateTime> Timestamps
-) : IRequest<CalculateTaxResult>;
+) : IRequest<Result<CalculateTaxResult>>;

@@ -81,7 +81,9 @@ public static class CityEndpoints
         var command = new CreateCityCommand(request.Name);
         var result = await sender.Send(command, cancellationToken);
 
-        return Results.Created($"/api/cities/{result.Id}", result);
+        return result.IsSuccess
+            ? Results.Created($"/api/cities/{result.Value.Id}", result.Value)
+            : Results.BadRequest(new { result.Error.Code, result.Error.Message });
     }
 
     private static async Task<IResult> UpdateCity(
@@ -94,7 +96,14 @@ public static class CityEndpoints
         var command = new UpdateCityCommand(cityId, request.Name);
         var result = await sender.Send(command, cancellationToken);
 
-        return Results.Ok(result);
+        if (result.IsFailure)
+        {
+            return result.Error.Code.Contains("NotFound")
+                ? Results.NotFound(new { result.Error.Code, result.Error.Message })
+                : Results.BadRequest(new { result.Error.Code, result.Error.Message });
+        }
+
+        return Results.Ok(result.Value);
     }
 
     private static async Task<IResult> AddCityTaxRule(
@@ -125,7 +134,14 @@ public static class CityEndpoints
 
         var result = await sender.Send(command, cancellationToken);
 
-        return Results.Created($"/api/cities/{cityId}/rules/{result.RuleId}", result);
+        if (result.IsFailure)
+        {
+            return result.Error.Code.Contains("NotFound")
+                ? Results.NotFound(new { result.Error.Code, result.Error.Message })
+                : Results.BadRequest(new { result.Error.Code, result.Error.Message });
+        }
+
+        return Results.Created($"/api/cities/{cityId}/rules/{result.Value.RuleId}", result.Value);
     }
 
     private static async Task<IResult> GetCityTaxRules(
@@ -191,6 +207,13 @@ public static class CityEndpoints
 
         var result = await sender.Send(command, cancellationToken);
 
-        return Results.Ok(result);
+        if (result.IsFailure)
+        {
+            return result.Error.Code.Contains("NotFound")
+                ? Results.NotFound(new { result.Error.Code, result.Error.Message })
+                : Results.BadRequest(new { result.Error.Code, result.Error.Message });
+        }
+
+        return Results.Ok(result.Value);
     }
 }

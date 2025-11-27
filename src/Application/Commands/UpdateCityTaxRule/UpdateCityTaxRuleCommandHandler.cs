@@ -1,3 +1,4 @@
+using Domain.Common;
 using Domain.Entities;
 using Domain.Exceptions;
 using Domain.Interfaces;
@@ -10,9 +11,9 @@ namespace Application.Commands.UpdateCityTaxRule;
 public sealed class UpdateCityTaxRuleCommandHandler(
     ITaxRuleRepository taxRuleRepository,
     ILogger<UpdateCityTaxRuleCommandHandler> logger
-) : IRequestHandler<UpdateCityTaxRuleCommand, UpdateCityTaxRuleResult>
+) : IRequestHandler<UpdateCityTaxRuleCommand, Result<UpdateCityTaxRuleResult>>
 {
-    public async Task<UpdateCityTaxRuleResult> Handle(
+    public async Task<Result<UpdateCityTaxRuleResult>> Handle(
         UpdateCityTaxRuleCommand request,
         CancellationToken cancellationToken
     )
@@ -31,20 +32,27 @@ public sealed class UpdateCityTaxRuleCommandHandler(
 
         if (existingRule is null)
         {
-            throw new TaxRuleNotFoundException(request.CityId, request.Year);
+            logger.LogWarning(
+                "Tax rule not found. RuleId: {RuleId}, CityId: {CityId}, Year: {Year}",
+                request.RuleId,
+                request.CityId,
+                request.Year
+            );
+            return Result.Failure<UpdateCityTaxRuleResult>(
+                Errors.TaxRule.NotFound(request.CityId, request.Year)
+            );
         }
 
         if (existingRule.CityId != request.CityId)
         {
-            throw new ValidationException(
-                $"Tax rule '{request.RuleId}' does not belong to city '{request.CityId}'",
-                new Dictionary<string, string[]>
-                {
-                    {
-                        nameof(request.CityId),
-                        new[] { "Tax rule does not belong to the specified city" }
-                    },
-                }
+            logger.LogWarning(
+                "Tax rule belongs to different city. RuleId: {RuleId}, ExpectedCityId: {ExpectedCityId}, ActualCityId: {ActualCityId}",
+                request.RuleId,
+                request.CityId,
+                existingRule.CityId
+            );
+            return Result.Failure<UpdateCityTaxRuleResult>(
+                Errors.TaxRule.WrongCity(request.RuleId, request.CityId)
             );
         }
 
@@ -58,15 +66,13 @@ public sealed class UpdateCityTaxRuleCommandHandler(
 
             if (duplicateRule is not null)
             {
-                throw new ValidationException(
-                    $"Another tax rule for year {request.Year} already exists for this city",
-                    new Dictionary<string, string[]>
-                    {
-                        {
-                            nameof(request.Year),
-                            new[] { $"Tax rule for year {request.Year} already exists" }
-                        },
-                    }
+                logger.LogWarning(
+                    "Tax rule for year already exists. CityId: {CityId}, Year: {Year}",
+                    request.CityId,
+                    request.Year
+                );
+                return Result.Failure<UpdateCityTaxRuleResult>(
+                    Errors.TaxRule.AlreadyExists(request.Year)
                 );
             }
         }
@@ -107,6 +113,8 @@ public sealed class UpdateCityTaxRuleCommandHandler(
             request.Year
         );
 
-        return new UpdateCityTaxRuleResult(updatedRule.Id, request.CityId, request.Year);
+        return Result.Success(
+            new UpdateCityTaxRuleResult(updatedRule.Id, request.CityId, request.Year)
+        );
     }
 }

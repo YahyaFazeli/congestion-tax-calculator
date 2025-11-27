@@ -1,3 +1,4 @@
+using Domain.Common;
 using Domain.Exceptions;
 using Domain.Interfaces;
 using MediatR;
@@ -8,9 +9,9 @@ namespace Application.Commands.UpdateCity;
 public sealed class UpdateCityCommandHandler(
     ICityRepository cityRepository,
     ILogger<UpdateCityCommandHandler> logger
-) : IRequestHandler<UpdateCityCommand, UpdateCityResult>
+) : IRequestHandler<UpdateCityCommand, Result<UpdateCityResult>>
 {
-    public async Task<UpdateCityResult> Handle(
+    public async Task<Result<UpdateCityResult>> Handle(
         UpdateCityCommand request,
         CancellationToken cancellationToken
     )
@@ -25,23 +26,20 @@ public sealed class UpdateCityCommandHandler(
 
         if (city is null)
         {
-            throw new CityNotFoundException(request.Id);
+            logger.LogWarning("City not found. CityId: {CityId}", request.Id);
+            return Result.Failure<UpdateCityResult>(Errors.City.NotFound(request.Id));
         }
 
         var existingCity = await cityRepository.GetByNameAsync(request.Name, cancellationToken);
 
         if (existingCity is not null && existingCity.Id != request.Id)
         {
-            throw new ValidationException(
-                $"City with name '{request.Name}' already exists",
-                new Dictionary<string, string[]>
-                {
-                    {
-                        nameof(request.Name),
-                        new[] { $"City with name '{request.Name}' already exists" }
-                    },
-                }
+            logger.LogWarning(
+                "City with name already exists. Name: {CityName}, ExistingCityId: {ExistingCityId}",
+                request.Name,
+                existingCity.Id
             );
+            return Result.Failure<UpdateCityResult>(Errors.City.AlreadyExists(request.Name));
         }
 
         city.UpdateName(request.Name);
@@ -55,6 +53,6 @@ public sealed class UpdateCityCommandHandler(
             city.Name
         );
 
-        return new UpdateCityResult(city.Id, city.Name);
+        return Result.Success(new UpdateCityResult(city.Id, city.Name));
     }
 }

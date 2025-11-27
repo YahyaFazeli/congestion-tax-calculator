@@ -1,4 +1,5 @@
 using Application.Commands.UpdateCity;
+using Domain.Common;
 using Domain.Entities;
 using Domain.Exceptions;
 using Domain.Interfaces;
@@ -44,8 +45,9 @@ public class UpdateCityCommandHandlerTests
         var result = await _handler.Handle(command, CancellationToken.None);
 
         // Assert
-        result.Id.Should().Be(city.Id);
-        result.Name.Should().Be(newName);
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Id.Should().Be(city.Id);
+        result.Value.Name.Should().Be(newName);
         _mockRepository.Verify(
             r => r.UpdateAsync(It.Is<City>(c => c.Name == newName), It.IsAny<CancellationToken>()),
             Times.Once
@@ -168,7 +170,8 @@ public class UpdateCityCommandHandlerTests
         var result = await _handler.Handle(command, CancellationToken.None);
 
         // Assert
-        result.Name.Should().Be(newName);
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Name.Should().Be(newName);
         _mockRepository.Verify(
             r => r.UpdateAsync(It.IsAny<City>(), It.IsAny<CancellationToken>()),
             Times.Once

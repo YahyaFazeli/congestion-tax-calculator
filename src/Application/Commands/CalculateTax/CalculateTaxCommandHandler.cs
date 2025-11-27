@@ -1,4 +1,4 @@
-using Domain.Exceptions;
+using Domain.Common;
 using Domain.Interfaces;
 using Domain.Services;
 using Domain.ValueObjects;
@@ -11,7 +11,7 @@ public sealed class CalculateTaxCommandHandler(
     ITaxRuleRepository taxRuleRepository,
     ITaxCalculator taxCalculator,
     ILogger<CalculateTaxCommandHandler> logger
-) : IRequestHandler<CalculateTaxCommand, CalculateTaxResult>
+) : IRequestHandler<CalculateTaxCommand, Result<CalculateTaxResult>>
 {
     private static string MaskVehicleRegistration(string registration)
     {
@@ -20,7 +20,7 @@ public sealed class CalculateTaxCommandHandler(
         return registration.Substring(0, 3) + "***";
     }
 
-    public async Task<CalculateTaxResult> Handle(
+    public async Task<Result<CalculateTaxResult>> Handle(
         CalculateTaxCommand request,
         CancellationToken cancellationToken
     )
@@ -41,7 +41,14 @@ public sealed class CalculateTaxCommandHandler(
 
         if (rule is null)
         {
-            throw new TaxRuleNotFoundException(request.CityId, request.Year);
+            logger.LogWarning(
+                "Tax rule not found for CityId: {CityId}, Year: {Year}",
+                request.CityId,
+                request.Year
+            );
+            return Result.Failure<CalculateTaxResult>(
+                Errors.TaxRule.NotFound(request.CityId, request.Year)
+            );
         }
 
         var vehicle = new Vehicle(request.VehicleRegistration, request.VehicleType);
@@ -55,6 +62,6 @@ public sealed class CalculateTaxCommandHandler(
             totalTax.Value
         );
 
-        return new CalculateTaxResult(totalTax.Value);
+        return Result.Success(new CalculateTaxResult(totalTax.Value));
     }
 }

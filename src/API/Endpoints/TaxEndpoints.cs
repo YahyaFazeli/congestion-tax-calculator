@@ -36,6 +36,13 @@ public static class TaxEndpoints
 
         var result = await sender.Send(command, cancellationToken);
 
-        return Results.Ok(result);
+        if (result.IsFailure)
+        {
+            return result.Error.Code.Contains("NotFound")
+                ? Results.NotFound(new { result.Error.Code, result.Error.Message })
+                : Results.BadRequest(new { result.Error.Code, result.Error.Message });
+        }
+
+        return Results.Ok(result.Value);
     }
 }

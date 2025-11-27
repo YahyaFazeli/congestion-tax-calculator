@@ -1,4 +1,5 @@
 using Application.Commands.UpdateCityTaxRule;
+using Domain.Common;
 using Domain.Entities;
 using Domain.Enums;
 using Domain.Exceptions;
@@ -52,9 +53,10 @@ public class UpdateCityTaxRuleCommandHandlerTests
         var result = await _handler.Handle(command, CancellationToken.None);
 
         // Assert
-        result.CityId.Should().Be(cityId);
-        result.Year.Should().Be(year);
-        result.RuleId.Should().NotBeEmpty();
+        result.IsSuccess.Should().BeTrue();
+        result.Value.CityId.Should().Be(cityId);
+        result.Value.Year.Should().Be(year);
+        result.Value.RuleId.Should().NotBeEmpty();
         _mockRepository.Verify(
             r => r.ReplaceRuleAsync(ruleId, It.IsAny<TaxRule>(), It.IsAny<CancellationToken>()),
             Times.Once
@@ -62,7 +64,7 @@ public class UpdateCityTaxRuleCommandHandlerTests
     }
 
     [Fact]
-    public async Task Handle_RuleNotFound_ThrowsTaxRuleNotFoundException()
+    public async Task Handle_RuleNotFound_ReturnsFailureResult()
     {
         // Arrange
         var cityId = Guid.NewGuid();
@@ -85,13 +87,13 @@ public class UpdateCityTaxRuleCommandHandlerTests
         );
 
         // Act
-        Func<Task> act = async () => await _handler.Handle(command, CancellationToken.None);
+        var result = await _handler.Handle(command, CancellationToken.None);
 
         // Assert
-        var exception = await act.Should().ThrowAsync<TaxRuleNotFoundException>();
-
-        exception.Which.CityId.Should().Be(cityId);
-        exception.Which.Year.Should().Be(2024);
+        result.IsFailure.Should().BeTrue();
+        result.Error.Code.Should().Be("TaxRule.NotFound");
+        result.Error.Message.Should().Contain(cityId.ToString());
+        result.Error.Message.Should().Contain("2024");
     }
 
     [Fact]

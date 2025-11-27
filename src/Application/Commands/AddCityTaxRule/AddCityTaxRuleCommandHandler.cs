@@ -1,3 +1,4 @@
+using Domain.Common;
 using Domain.Entities;
 using Domain.Exceptions;
 using Domain.Interfaces;
@@ -10,9 +11,9 @@ namespace Application.Commands.AddCityTaxRule;
 public sealed class AddCityTaxRuleCommandHandler(
     ICityRepository cityRepository,
     ILogger<AddCityTaxRuleCommandHandler> logger
-) : IRequestHandler<AddCityTaxRuleCommand, AddCityTaxRuleResult>
+) : IRequestHandler<AddCityTaxRuleCommand, Result<AddCityTaxRuleResult>>
 {
-    public async Task<AddCityTaxRuleResult> Handle(
+    public async Task<Result<AddCityTaxRuleResult>> Handle(
         AddCityTaxRuleCommand request,
         CancellationToken cancellationToken
     )
@@ -27,22 +28,19 @@ public sealed class AddCityTaxRuleCommandHandler(
 
         if (city is null)
         {
-            throw new CityNotFoundException(request.CityId);
+            logger.LogWarning("City not found. CityId: {CityId}", request.CityId);
+            return Result.Failure<AddCityTaxRuleResult>(Errors.City.NotFound(request.CityId));
         }
 
         var existingRule = city.GetRuleForYear(request.Year);
         if (existingRule is not null)
         {
-            throw new ValidationException(
-                $"Tax rule for year {request.Year} already exists for city '{city.Name}'",
-                new Dictionary<string, string[]>
-                {
-                    {
-                        nameof(request.Year),
-                        new[] { $"Tax rule for year {request.Year} already exists" }
-                    },
-                }
+            logger.LogWarning(
+                "Tax rule for year already exists. CityId: {CityId}, Year: {Year}",
+                request.CityId,
+                request.Year
             );
+            return Result.Failure<AddCityTaxRuleResult>(Errors.TaxRule.AlreadyExists(request.Year));
         }
 
         var intervals = request.Intervals.Select(i =>
@@ -81,6 +79,6 @@ public sealed class AddCityTaxRuleCommandHandler(
             request.Year
         );
 
-        return new AddCityTaxRuleResult(taxRule.Id, city.Id, request.Year);
+        return Result.Success(new AddCityTaxRuleResult(taxRule.Id, city.Id, request.Year));
     }
 }

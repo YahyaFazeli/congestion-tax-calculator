@@ -1,4 +1,5 @@
 using Application.Commands.CreateCity;
+using Domain.Common;
 using Domain.Entities;
 using Domain.Interfaces;
 using FluentAssertions;
@@ -35,8 +36,9 @@ public class CreateCityCommandHandlerTests
         var result = await _handler.Handle(command, CancellationToken.None);
 
         // Assert
-        result.Name.Should().Be(cityName);
-        result.Id.Should().NotBeEmpty();
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Name.Should().Be(cityName);
+        result.Value.Id.Should().NotBeEmpty();
         _mockRepository.Verify(
             r => r.AddAsync(It.Is<City>(c => c.Name == cityName), It.IsAny<CancellationToken>()),
             Times.Once

@@ -1,4 +1,5 @@
 using Application.Commands.CalculateTax;
+using Domain.Common;
 using Domain.Entities;
 using Domain.Enums;
 using Domain.Exceptions;
@@ -65,12 +66,13 @@ public class CalculateTaxCommandHandlerTests
         var result = await _handler.Handle(command, CancellationToken.None);
 
         // Assert
-        result.TotalTax.Should().Be(21);
-        result.Currency.Should().Be("SEK");
+        result.IsSuccess.Should().BeTrue();
+        result.Value.TotalTax.Should().Be(21);
+        result.Value.Currency.Should().Be("SEK");
     }
 
     [Fact]
-    public async Task Handle_CityNotFound_ThrowsTaxRuleNotFoundException()
+    public async Task Handle_CityNotFound_ReturnsFailureResult()
     {
         // Arrange
         var cityId = Guid.NewGuid();
@@ -89,19 +91,17 @@ public class CalculateTaxCommandHandlerTests
         );
 
         // Act
-        Func<Task> act = async () => await _handler.Handle(command, CancellationToken.None);
+        var result = await _handler.Handle(command, CancellationToken.None);
 
         // Assert
-        var exception = await act.Should()
-            .ThrowAsync<TaxRuleNotFoundException>()
-            .WithMessage($"No tax rule found for city {cityId} and year {year}");
-
-        exception.Which.CityId.Should().Be(cityId);
-        exception.Which.Year.Should().Be(year);
+        result.IsFailure.Should().BeTrue();
+        result.Error.Code.Should().Be("TaxRule.NotFound");
+        result.Error.Message.Should().Contain(cityId.ToString());
+        result.Error.Message.Should().Contain(year.ToString());
     }
 
     [Fact]
-    public async Task Handle_YearNotFound_ThrowsTaxRuleNotFoundException()
+    public async Task Handle_YearNotFound_ReturnsFailureResult()
     {
         // Arrange
         var cityId = Guid.NewGuid();
@@ -120,10 +120,11 @@ public class CalculateTaxCommandHandlerTests
         );
 
         // Act
-        Func<Task> act = async () => await _handler.Handle(command, CancellationToken.None);
+        var result = await _handler.Handle(command, CancellationToken.None);
 
         // Assert
-        await act.Should().ThrowAsync<TaxRuleNotFoundException>();
+        result.IsFailure.Should().BeTrue();
+        result.Error.Code.Should().Be("TaxRule.NotFound");
     }
 
     [Fact]
@@ -240,7 +241,8 @@ public class CalculateTaxCommandHandlerTests
         var result = await _handler.Handle(command, CancellationToken.None);
 
         // Assert
-        result.TotalTax.Should().Be(0);
+        result.IsSuccess.Should().BeTrue();
+        result.Value.TotalTax.Should().Be(0);
     }
 
     [Fact]
@@ -277,7 +279,8 @@ public class CalculateTaxCommandHandlerTests
         var result = await _handler.Handle(command, CancellationToken.None);
 
         // Assert
-        result.TotalTax.Should().Be(0);
+        result.IsSuccess.Should().BeTrue();
+        result.Value.TotalTax.Should().Be(0);
     }
 
     [Fact]

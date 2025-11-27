@@ -1,3 +1,4 @@
+using Domain.Common;
 using Domain.Enums;
 using MediatR;
 
@@ -13,7 +14,7 @@ public sealed record AddCityTaxRuleCommand(
     IEnumerable<Month> FreeMonths,
     IEnumerable<DayOfWeek> FreeWeekdays,
     IEnumerable<VehicleType> FreeVehicles
-) : IRequest<AddCityTaxRuleResult>;
+) : IRequest<Result<AddCityTaxRuleResult>>;
 
 public sealed record TollIntervalDto(string Start, string End, decimal Amount);
 
