@@ -37,17 +37,68 @@ public sealed class TaxRule : Entity
         IEnumerable<TollFreeVehicle> freeVehicles
     )
     {
+        if (id == Guid.Empty)
+            throw new ArgumentException("Tax rule ID cannot be empty.", nameof(id));
+
+        if (cityId == Guid.Empty)
+            throw new ArgumentException("City ID cannot be empty.", nameof(cityId));
+
+        if (year < 1900 || year > 2100)
+            throw new ArgumentException("Year must be between 1900 and 2100.", nameof(year));
+
+        if (dailyMax.Value <= 0)
+            throw new ArgumentException(
+                "Daily maximum must be greater than zero.",
+                nameof(dailyMax)
+            );
+
+        if (singleChargeMinutes <= 0)
+            throw new ArgumentException(
+                "Single charge minutes must be greater than zero.",
+                nameof(singleChargeMinutes)
+            );
+
+        var intervalList =
+            intervals?.ToList() ?? throw new ArgumentNullException(nameof(intervals));
+        if (intervalList.Count == 0)
+            throw new ArgumentException(
+                "At least one toll interval is required.",
+                nameof(intervals)
+            );
+
+        ValidateNoOverlappingIntervals(intervalList);
+
         Id = id;
         CityId = cityId;
         Year = year;
         DailyMax = dailyMax;
         SingleChargeMinutes = singleChargeMinutes;
 
-        _intervals.AddRange(intervals);
-        _tollFreeDates.AddRange(freeDates);
-        _tollFreeMonths.AddRange(freeMonths);
-        _tollFreeWeekdays.AddRange(freeWeekdays);
-        _tollFreeVehicles.AddRange(freeVehicles);
+        _intervals.AddRange(intervalList);
+        _tollFreeDates.AddRange(freeDates ?? []);
+        _tollFreeMonths.AddRange(freeMonths ?? []);
+        _tollFreeWeekdays.AddRange(freeWeekdays ?? []);
+        _tollFreeVehicles.AddRange(freeVehicles ?? []);
+    }
+
+    private static void ValidateNoOverlappingIntervals(List<TollInterval> intervals)
+    {
+        var sorted = intervals.OrderBy(i => i.Start).ToList();
+
+        for (int i = 0; i < sorted.Count - 1; i++)
+        {
+            var current = sorted[i];
+            var next = sorted[i + 1];
+
+            // Check if current interval's end (inclusive) overlaps with next interval's start
+            if (current.End >= next.Start)
+            {
+                throw new ArgumentException(
+                    $"Toll intervals cannot overlap. Interval {current.Start}-{current.End} overlaps with {next.Start}-{next.End}.",
+                    nameof(intervals)
+                );
+            }
+        }
     }
 
     public static TaxRule Create(

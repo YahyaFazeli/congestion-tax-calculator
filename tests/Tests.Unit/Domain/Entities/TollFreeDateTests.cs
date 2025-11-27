@@ -116,4 +116,28 @@ public class TollFreeDateTests
         // Assert
         result.Should().BeFalse();
     }
+
+    [Fact]
+    public void Constructor_WithEmptyId_ThrowsArgumentException()
+    {
+        // Act
+        var act = () => new TollFreeDate(Guid.Empty, new DateOnly(2013, 3, 29), false);
+
+        // Assert
+        act.Should().Throw<ArgumentException>().WithMessage("*Toll free date ID cannot be empty*");
+    }
+
+    [Theory]
+    [InlineData(1899)]
+    [InlineData(2101)]
+    public void Constructor_WithInvalidYear_ThrowsArgumentException(int year)
+    {
+        // Act
+        var act = () => new TollFreeDate(Guid.NewGuid(), new DateOnly(year, 1, 1), false);
+
+        // Assert
+        act.Should()
+            .Throw<ArgumentException>()
+            .WithMessage("*Date year must be between 1900 and 2100*");
+    }
 }

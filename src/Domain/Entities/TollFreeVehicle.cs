@@ -12,6 +12,15 @@ public sealed class TollFreeVehicle : Entity
 
     public TollFreeVehicle(Guid id, VehicleType vehicleType)
     {
+        if (id == Guid.Empty)
+            throw new ArgumentException("Toll free vehicle ID cannot be empty.", nameof(id));
+
+        if (!Enum.IsDefined(typeof(VehicleType), vehicleType))
+            throw new ArgumentException(
+                $"Invalid vehicle type value: {vehicleType}.",
+                nameof(vehicleType)
+            );
+
         Id = id;
         VehicleType = vehicleType;
     }

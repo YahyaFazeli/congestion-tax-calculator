@@ -95,4 +95,27 @@ public class TollFreeWeekdayTests
         // Assert
         result.Should().BeFalse();
     }
+
+    [Fact]
+    public void Constructor_WithEmptyId_ThrowsArgumentException()
+    {
+        // Act
+        var act = () => new TollFreeWeekday(Guid.Empty, DayOfWeek.Saturday);
+
+        // Assert
+        act.Should()
+            .Throw<ArgumentException>()
+            .WithMessage("*Toll free weekday ID cannot be empty*");
+    }
+
+    [Fact]
+    public void Constructor_WithInvalidDayOfWeek_ThrowsArgumentException()
+    {
+        // Act
+        var invalidDay = unchecked((DayOfWeek)7);
+        var act = () => new TollFreeWeekday(Guid.NewGuid(), invalidDay);
+
+        // Assert
+        act.Should().Throw<ArgumentException>().WithMessage("*Invalid day of week value*");
+    }
 }

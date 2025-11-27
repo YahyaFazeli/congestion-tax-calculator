@@ -21,17 +21,6 @@ public sealed class UpdateCityCommandHandler(
             request.Name
         );
 
-        if (string.IsNullOrWhiteSpace(request.Name))
-        {
-            throw new ValidationException(
-                "City name cannot be null or whitespace",
-                new Dictionary<string, string[]>
-                {
-                    { nameof(request.Name), new[] { "City name is required" } },
-                }
-            );
-        }
-
         var city = await cityRepository.GetByIdAsync(request.Id, cancellationToken);
 
         if (city is null)

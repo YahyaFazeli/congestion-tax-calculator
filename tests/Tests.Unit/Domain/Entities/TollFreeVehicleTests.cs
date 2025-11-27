@@ -65,4 +65,27 @@ public class TollFreeVehicleTests
         // Assert
         result.Should().BeTrue();
     }
+
+    [Fact]
+    public void Constructor_WithEmptyId_ThrowsArgumentException()
+    {
+        // Act
+        var act = () => new TollFreeVehicle(Guid.Empty, VehicleType.Motorbike);
+
+        // Assert
+        act.Should()
+            .Throw<ArgumentException>()
+            .WithMessage("*Toll free vehicle ID cannot be empty*");
+    }
+
+    [Fact]
+    public void Constructor_WithInvalidVehicleType_ThrowsArgumentException()
+    {
+        // Act
+        var invalidType = unchecked((VehicleType)999);
+        var act = () => new TollFreeVehicle(Guid.NewGuid(), invalidType);
+
+        // Assert
+        act.Should().Throw<ArgumentException>().WithMessage("*Invalid vehicle type value*");
+    }
 }

@@ -56,7 +56,7 @@ public class TollIntervalTests
     public void IsWithin_TimestampAtEndBoundary_ReturnsFalse()
     {
         // Arrange
-        var interval = TollInterval.Create(new TimeOnly(6, 0), new TimeOnly(6, 29), new Money(8));
+        var interval = TollInterval.Create(new TimeOnly(6, 0), new TimeOnly(6, 30), new Money(8));
         var timestamp = new DateTime(2013, 2, 7, 6, 30, 0);
 
         // Act
@@ -98,7 +98,7 @@ public class TollIntervalTests
     public void IsWithin_TimestampOneMinuteBeforeEnd_ReturnsTrue()
     {
         // Arrange
-        var interval = TollInterval.Create(new TimeOnly(6, 0), new TimeOnly(6, 29), new Money(8));
+        var interval = TollInterval.Create(new TimeOnly(6, 0), new TimeOnly(6, 30), new Money(8));
         var timestamp = new DateTime(2013, 2, 7, 6, 29, 0);
 
         // Act
@@ -106,5 +106,69 @@ public class TollIntervalTests
 
         // Assert
         result.Should().BeTrue();
+    }
+
+    [Fact]
+    public void IsWithin_TimestampOneSecondBeforeEnd_ReturnsTrue()
+    {
+        // Arrange
+        var interval = TollInterval.Create(new TimeOnly(6, 0), new TimeOnly(6, 30), new Money(8));
+        var timestamp = new DateTime(2013, 2, 7, 6, 29, 59);
+
+        // Act
+        var result = interval.IsWithin(timestamp);
+
+        // Assert
+        result.Should().BeTrue();
+    }
+
+    [Fact]
+    public void Constructor_WithEmptyId_ThrowsArgumentException()
+    {
+        // Act
+        var act = () =>
+            new TollInterval(Guid.Empty, new TimeOnly(6, 0), new TimeOnly(6, 29), new Money(8));
+
+        // Assert
+        act.Should().Throw<ArgumentException>().WithMessage("*Toll interval ID cannot be empty*");
+    }
+
+    [Fact]
+    public void Constructor_WithStartAfterEnd_ThrowsArgumentException()
+    {
+        // Act
+        var act = () =>
+            new TollInterval(Guid.NewGuid(), new TimeOnly(6, 30), new TimeOnly(6, 0), new Money(8));
+
+        // Assert
+        act.Should()
+            .Throw<ArgumentException>()
+            .WithMessage("*Start time*must be before end time*");
+    }
+
+    [Fact]
+    public void Constructor_WithStartEqualToEnd_ThrowsArgumentException()
+    {
+        // Act
+        var act = () =>
+            new TollInterval(Guid.NewGuid(), new TimeOnly(6, 0), new TimeOnly(6, 0), new Money(8));
+
+        // Assert
+        act.Should()
+            .Throw<ArgumentException>()
+            .WithMessage("*Start time*must be before end time*");
+    }
+
+    [Fact]
+    public void Constructor_WithNegativeAmount_ThrowsArgumentException()
+    {
+        // Act
+        var act = () =>
+        {
+            var negativeAmount = new Money(-5);
+        };
+
+        // Assert - Money constructor should throw
+        act.Should().Throw<ArgumentException>().WithMessage("*Money cannot be negative*");
     }
 }

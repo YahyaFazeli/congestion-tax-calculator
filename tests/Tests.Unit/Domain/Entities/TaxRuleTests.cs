@@ -15,9 +15,23 @@ public class TaxRuleTests
         var year = 2013;
         var dailyMax = new Money(60);
         var singleChargeMinutes = 60;
+        var intervals = new[]
+        {
+            TollInterval.Create(new TimeOnly(6, 0), new TimeOnly(6, 29), new Money(8)),
+        };
 
         // Act
-        var rule = TaxRule.Create(cityId, year, dailyMax, singleChargeMinutes, [], [], [], [], []);
+        var rule = TaxRule.Create(
+            cityId,
+            year,
+            dailyMax,
+            singleChargeMinutes,
+            intervals,
+            [],
+            [],
+            [],
+            []
+        );
 
         // Assert
         rule.CityId.Should().Be(cityId);
@@ -250,19 +264,27 @@ public class TaxRuleTests
 
     private static TaxRule CreateTestRule(int year)
     {
-        return TaxRule.Create(Guid.NewGuid(), year, new Money(60), 60, [], [], [], [], []);
+        var intervals = new[]
+        {
+            TollInterval.Create(new TimeOnly(6, 0), new TimeOnly(6, 29), new Money(8)),
+        };
+        return TaxRule.Create(Guid.NewGuid(), year, new Money(60), 60, intervals, [], [], [], []);
     }
 
     private static TaxRule CreateTestRuleWithExemptVehicles(params VehicleType[] types)
     {
         var exemptVehicles = types.Select(t => TollFreeVehicle.Create(t)).ToList();
+        var intervals = new[]
+        {
+            TollInterval.Create(new TimeOnly(6, 0), new TimeOnly(6, 29), new Money(8)),
+        };
 
         return TaxRule.Create(
             Guid.NewGuid(),
             2013,
             new Money(60),
             60,
-            [],
+            intervals,
             [],
             [],
             [],
@@ -277,22 +299,64 @@ public class TaxRuleTests
             TollFreeWeekday.Create(DayOfWeek.Saturday),
             TollFreeWeekday.Create(DayOfWeek.Sunday),
         };
+        var intervals = new[]
+        {
+            TollInterval.Create(new TimeOnly(6, 0), new TimeOnly(6, 29), new Money(8)),
+        };
 
-        return TaxRule.Create(Guid.NewGuid(), 2013, new Money(60), 60, [], [], [], weekends, []);
+        return TaxRule.Create(
+            Guid.NewGuid(),
+            2013,
+            new Money(60),
+            60,
+            intervals,
+            [],
+            [],
+            weekends,
+            []
+        );
     }
 
     private static TaxRule CreateTestRuleWithJulyFree()
     {
         var julyFree = new[] { TollFreeMonth.Create(Month.July) };
+        var intervals = new[]
+        {
+            TollInterval.Create(new TimeOnly(6, 0), new TimeOnly(6, 29), new Money(8)),
+        };
 
-        return TaxRule.Create(Guid.NewGuid(), 2013, new Money(60), 60, [], [], julyFree, [], []);
+        return TaxRule.Create(
+            Guid.NewGuid(),
+            2013,
+            new Money(60),
+            60,
+            intervals,
+            [],
+            julyFree,
+            [],
+            []
+        );
     }
 
     private static TaxRule CreateTestRuleWithHoliday(DateOnly date, bool includeDayBefore)
     {
         var holidays = new[] { TollFreeDate.Create(date, includeDayBefore) };
+        var intervals = new[]
+        {
+            TollInterval.Create(new TimeOnly(6, 0), new TimeOnly(6, 29), new Money(8)),
+        };
 
-        return TaxRule.Create(Guid.NewGuid(), 2013, new Money(60), 60, [], holidays, [], [], []);
+        return TaxRule.Create(
+            Guid.NewGuid(),
+            2013,
+            new Money(60),
+            60,
+            intervals,
+            holidays,
+            [],
+            [],
+            []
+        );
     }
 
     private static TaxRule CreateTestRuleWithIntervals()
@@ -321,5 +385,261 @@ public class TaxRuleTests
         };
 
         return TaxRule.Create(Guid.NewGuid(), 2013, new Money(60), 60, intervals, [], [], [], []);
+    }
+
+    [Fact]
+    public void Constructor_WithEmptyId_ThrowsArgumentException()
+    {
+        // Arrange
+        var intervals = new[]
+        {
+            TollInterval.Create(new TimeOnly(6, 0), new TimeOnly(6, 29), new Money(8)),
+        };
+
+        // Act
+        var act = () =>
+            new TaxRule(
+                Guid.Empty,
+                Guid.NewGuid(),
+                2013,
+                new Money(60),
+                60,
+                intervals,
+                [],
+                [],
+                [],
+                []
+            );
+
+        // Assert
+        act.Should().Throw<ArgumentException>().WithMessage("*Tax rule ID cannot be empty*");
+    }
+
+    [Fact]
+    public void Constructor_WithEmptyCityId_ThrowsArgumentException()
+    {
+        // Arrange
+        var intervals = new[]
+        {
+            TollInterval.Create(new TimeOnly(6, 0), new TimeOnly(6, 29), new Money(8)),
+        };
+
+        // Act
+        var act = () =>
+            new TaxRule(
+                Guid.NewGuid(),
+                Guid.Empty,
+                2013,
+                new Money(60),
+                60,
+                intervals,
+                [],
+                [],
+                [],
+                []
+            );
+
+        // Assert
+        act.Should().Throw<ArgumentException>().WithMessage("*City ID cannot be empty*");
+    }
+
+    [Theory]
+    [InlineData(1899)]
+    [InlineData(2101)]
+    public void Constructor_WithInvalidYear_ThrowsArgumentException(int year)
+    {
+        // Arrange
+        var intervals = new[]
+        {
+            TollInterval.Create(new TimeOnly(6, 0), new TimeOnly(6, 29), new Money(8)),
+        };
+
+        // Act
+        var act = () =>
+            new TaxRule(
+                Guid.NewGuid(),
+                Guid.NewGuid(),
+                year,
+                new Money(60),
+                60,
+                intervals,
+                [],
+                [],
+                [],
+                []
+            );
+
+        // Assert
+        act.Should()
+            .Throw<ArgumentException>()
+            .WithMessage("*Year must be between 1900 and 2100*");
+    }
+
+    [Fact]
+    public void Constructor_WithZeroDailyMax_ThrowsArgumentException()
+    {
+        // Arrange
+        var intervals = new[]
+        {
+            TollInterval.Create(new TimeOnly(6, 0), new TimeOnly(6, 29), new Money(8)),
+        };
+
+        // Act
+        var act = () =>
+            new TaxRule(
+                Guid.NewGuid(),
+                Guid.NewGuid(),
+                2013,
+                new Money(0),
+                60,
+                intervals,
+                [],
+                [],
+                [],
+                []
+            );
+
+        // Assert
+        act.Should()
+            .Throw<ArgumentException>()
+            .WithMessage("*Daily maximum must be greater than zero*");
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(-1)]
+    public void Constructor_WithInvalidSingleChargeMinutes_ThrowsArgumentException(
+        int singleChargeMinutes
+    )
+    {
+        // Arrange
+        var intervals = new[]
+        {
+            TollInterval.Create(new TimeOnly(6, 0), new TimeOnly(6, 29), new Money(8)),
+        };
+
+        // Act
+        var act = () =>
+            new TaxRule(
+                Guid.NewGuid(),
+                Guid.NewGuid(),
+                2013,
+                new Money(60),
+                singleChargeMinutes,
+                intervals,
+                [],
+                [],
+                [],
+                []
+            );
+
+        // Assert
+        act.Should()
+            .Throw<ArgumentException>()
+            .WithMessage("*Single charge minutes must be greater than zero*");
+    }
+
+    [Fact]
+    public void Constructor_WithNullIntervals_ThrowsArgumentNullException()
+    {
+        // Act
+        var act = () =>
+            new TaxRule(
+                Guid.NewGuid(),
+                Guid.NewGuid(),
+                2013,
+                new Money(60),
+                60,
+                null!,
+                [],
+                [],
+                [],
+                []
+            );
+
+        // Assert
+        act.Should().Throw<ArgumentNullException>();
+    }
+
+    [Fact]
+    public void Constructor_WithEmptyIntervals_ThrowsArgumentException()
+    {
+        // Act
+        var act = () =>
+            new TaxRule(
+                Guid.NewGuid(),
+                Guid.NewGuid(),
+                2013,
+                new Money(60),
+                60,
+                [],
+                [],
+                [],
+                [],
+                []
+            );
+
+        // Assert
+        act.Should()
+            .Throw<ArgumentException>()
+            .WithMessage("*At least one toll interval is required*");
+    }
+
+    [Fact]
+    public void Constructor_WithOverlappingIntervals_ThrowsArgumentException()
+    {
+        // Arrange
+        var intervals = new[]
+        {
+            TollInterval.Create(new TimeOnly(6, 0), new TimeOnly(6, 29), new Money(8)),
+            TollInterval.Create(new TimeOnly(6, 29), new TimeOnly(6, 59), new Money(13)), // Overlaps with previous
+        };
+
+        // Act
+        var act = () =>
+            new TaxRule(
+                Guid.NewGuid(),
+                Guid.NewGuid(),
+                2013,
+                new Money(60),
+                60,
+                intervals,
+                [],
+                [],
+                [],
+                []
+            );
+
+        // Assert
+        act.Should().Throw<ArgumentException>().WithMessage("*Toll intervals cannot overlap*");
+    }
+
+    [Fact]
+    public void Constructor_WithNonOverlappingIntervals_CreatesSuccessfully()
+    {
+        // Arrange
+        var intervals = new[]
+        {
+            TollInterval.Create(new TimeOnly(6, 0), new TimeOnly(6, 29), new Money(8)),
+            TollInterval.Create(new TimeOnly(6, 30), new TimeOnly(6, 59), new Money(13)), // No overlap
+        };
+
+        // Act
+        var act = () =>
+            new TaxRule(
+                Guid.NewGuid(),
+                Guid.NewGuid(),
+                2013,
+                new Money(60),
+                60,
+                intervals,
+                [],
+                [],
+                [],
+                []
+            );
+
+        // Assert
+        act.Should().NotThrow();
     }
 }

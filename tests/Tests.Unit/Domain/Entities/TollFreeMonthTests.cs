@@ -97,4 +97,27 @@ public class TollFreeMonthTests
         // Assert
         result.Should().BeFalse();
     }
+
+    [Fact]
+    public void Constructor_WithEmptyId_ThrowsArgumentException()
+    {
+        // Act
+        var act = () => new TollFreeMonth(Guid.Empty, Month.July);
+
+        // Assert
+        act.Should()
+            .Throw<ArgumentException>()
+            .WithMessage("*Toll free month ID cannot be empty*");
+    }
+
+    [Fact]
+    public void Constructor_WithInvalidMonth_ThrowsArgumentException()
+    {
+        // Act
+        var invalidMonth = unchecked((Month)13);
+        var act = () => new TollFreeMonth(Guid.NewGuid(), invalidMonth);
+
+        // Assert
+        act.Should().Throw<ArgumentException>().WithMessage("*Invalid month value*");
+    }
 }
