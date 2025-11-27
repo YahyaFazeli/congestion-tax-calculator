@@ -3,8 +3,10 @@ using Infrastructure.Interceptors;
 using Infrastructure.Persistence;
 using Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace Infrastructure;
 
@@ -45,6 +47,9 @@ public static class DependencyInjection
                     .AddInterceptors(interceptor);
             }
         );
+
+        // Register memory cache
+        services.AddMemoryCache();
 
         // Register repositories
         services.AddScoped<ICityRepository, CityRepository>();
