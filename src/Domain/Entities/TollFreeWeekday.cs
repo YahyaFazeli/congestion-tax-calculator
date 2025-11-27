@@ -1,4 +1,4 @@
-﻿using Domain.Base;
+using Domain.Base;
 
 namespace Domain.Entities;
 
@@ -20,5 +20,8 @@ public sealed class TollFreeWeekday : Entity
         return new(NewId(), day);
     }
 
-    public bool Matches(DateTime dt) => dt.DayOfWeek == Day;
+    public bool Matches(DateTime dt)
+    {
+        return dt.DayOfWeek == Day;
+    }
 }

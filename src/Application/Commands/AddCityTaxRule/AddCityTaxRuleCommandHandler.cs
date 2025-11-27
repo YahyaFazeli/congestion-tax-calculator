@@ -17,11 +17,7 @@ public sealed class AddCityTaxRuleCommandHandler(
         CancellationToken cancellationToken
     )
     {
-        logger.LogInformation(
-            "Adding tax rule for CityId: {CityId}, Year: {Year}",
-            request.CityId,
-            request.Year
-        );
+        logger.LogInformation("Adding tax rule for CityId: {CityId}, Year: {Year}", request.CityId, request.Year);
 
         var city = await cityRepository.GetByIdWithRulesAsync(request.CityId, cancellationToken);
 

@@ -4,6 +4,7 @@ using Domain.Enums;
 using Domain.Interfaces;
 using Domain.ValueObjects;
 using FluentAssertions;
+using Microsoft.Extensions.Logging;
 using Moq;
 
 namespace Tests.Unit.Application.Queries;
@@ -11,12 +12,14 @@ namespace Tests.Unit.Application.Queries;
 public class GetCityTaxRuleQueryHandlerTests
 {
     private readonly Mock<ICityRepository> _mockRepository;
+    private readonly Mock<ILogger<GetCityTaxRuleQueryHandler>> _mockLogger;
     private readonly GetCityTaxRuleQueryHandler _handler;
 
     public GetCityTaxRuleQueryHandlerTests()
     {
         _mockRepository = new Mock<ICityRepository>();
-        _handler = new GetCityTaxRuleQueryHandler(_mockRepository.Object);
+        _mockLogger = new Mock<ILogger<GetCityTaxRuleQueryHandler>>();
+        _handler = new GetCityTaxRuleQueryHandler(_mockRepository.Object, _mockLogger.Object);
     }
 
     [Fact]

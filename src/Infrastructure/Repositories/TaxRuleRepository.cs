@@ -97,11 +97,7 @@ public class TaxRuleRepository(CongestionTaxDbContext context, ILogger<TaxRuleRe
         CancellationToken cancellationToken = default
     )
     {
-        logger.LogDebug(
-            "Replacing tax rule. OldRuleId: {OldRuleId}, NewRuleId: {NewRuleId}",
-            oldRuleId,
-            newRule.Id
-        );
+        logger.LogDebug("Replacing tax rule. OldRuleId: {OldRuleId}, NewRuleId: {NewRuleId}", oldRuleId, newRule.Id);
 
         try
         {

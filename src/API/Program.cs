@@ -19,15 +19,21 @@ try
     builder.Services.AddApplicationServices();
     builder.Services.AddApiServices();
 
+    // Add simple health check
+    builder.Services.AddHealthChecks();
+
     var app = builder.Build();
 
-    // Seed database
-    using (var scope = app.Services.CreateScope())
+    // Seed database (skip in test environment)
+    if (app.Environment.EnvironmentName != "Test")
     {
-        var context = scope.ServiceProvider.GetRequiredService<CongestionTaxDbContext>();
-        await context.Database.EnsureCreatedAsync();
-        //await context.Database.MigrateAsync();
-        await SeedData.SeedGothenburg2013Async(context);
+        using (var scope = app.Services.CreateScope())
+        {
+            var context = scope.ServiceProvider.GetRequiredService<CongestionTaxDbContext>();
+            await context.Database.EnsureCreatedAsync();
+            //await context.Database.MigrateAsync();
+            await SeedData.SeedGothenburg2013Async(context);
+        }
     }
 
     if (app.Environment.IsDevelopment())
@@ -48,6 +54,9 @@ try
     app.MapTaxEndpoints();
     app.MapCityEndpoints();
 
+    // Map health check endpoint
+    app.MapHealthChecks("/health");
+
     await app.RunAsync();
 }
 catch (Exception ex)
@@ -58,3 +67,6 @@ finally
 {
     Log.CloseAndFlush();
 }
+
+// Make Program class accessible to integration tests
+public partial class Program { }

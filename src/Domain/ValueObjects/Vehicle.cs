@@ -16,5 +16,32 @@ public readonly struct Vehicle
         Type = type;
     }
 
+    public static bool operator ==(Vehicle a, Vehicle b) => a.Equals(b);
+
+    public static bool operator !=(Vehicle a, Vehicle b) => !a.Equals(b);
+
+    public bool Equals(Vehicle other) =>
+        string.Equals(Registration, other.Registration, StringComparison.OrdinalIgnoreCase) && Type == other.Type;
+
+    public override bool Equals(object? obj) =>
+        obj is Vehicle other && Equals(other);
+
+    public override int GetHashCode() =>
+        HashCode.Combine(Registration.ToUpperInvariant(), Type);
+
+    public int CompareTo(Vehicle other)
+    {
+        var regComparison = string.Compare(
+            Registration,
+            other.Registration,
+            StringComparison.OrdinalIgnoreCase
+        );
+
+        if (regComparison != 0)
+            return regComparison;
+
+        return Type.CompareTo(other.Type);
+    }
+
     public override string ToString() => $"{Type} ({Registration})";
 }

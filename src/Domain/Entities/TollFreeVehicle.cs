@@ -21,5 +21,8 @@ public sealed class TollFreeVehicle : Entity
         return new(NewId(), vehicleType);
     }
 
-    public bool Matches(Vehicle vehicle) => vehicle.Type == VehicleType;
+    public bool Matches(Vehicle vehicle)
+    {
+        return vehicle.Type == VehicleType;
+    }
 }

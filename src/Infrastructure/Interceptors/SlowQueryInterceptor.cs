@@ -5,15 +5,9 @@ using Microsoft.Extensions.Logging;
 
 namespace Infrastructure.Interceptors;
 
-public class SlowQueryInterceptor : DbCommandInterceptor
+public class SlowQueryInterceptor(ILogger<SlowQueryInterceptor> logger) : DbCommandInterceptor
 {
-    private readonly ILogger<SlowQueryInterceptor> _logger;
     private const int SlowQueryThresholdMs = 1000;
-
-    public SlowQueryInterceptor(ILogger<SlowQueryInterceptor> logger)
-    {
-        _logger = logger;
-    }
 
     public override async ValueTask<DbDataReader> ReaderExecutedAsync(
         DbCommand command,
@@ -24,7 +18,7 @@ public class SlowQueryInterceptor : DbCommandInterceptor
     {
         if (eventData.Duration.TotalMilliseconds > SlowQueryThresholdMs)
         {
-            _logger.LogWarning(
+            logger.LogWarning(
                 "Slow SQL query detected: {ElapsedMs}ms - {Sql}",
                 eventData.Duration.TotalMilliseconds,
                 command.CommandText
@@ -42,7 +36,7 @@ public class SlowQueryInterceptor : DbCommandInterceptor
     {
         if (eventData.Duration.TotalMilliseconds > SlowQueryThresholdMs)
         {
-            _logger.LogWarning(
+            logger.LogWarning(
                 "Slow SQL query detected: {ElapsedMs}ms - {Sql}",
                 eventData.Duration.TotalMilliseconds,
                 command.CommandText
@@ -61,7 +55,7 @@ public class SlowQueryInterceptor : DbCommandInterceptor
     {
         if (eventData.Duration.TotalMilliseconds > SlowQueryThresholdMs)
         {
-            _logger.LogWarning(
+            logger.LogWarning(
                 "Slow SQL command detected: {ElapsedMs}ms - {Sql}",
                 eventData.Duration.TotalMilliseconds,
                 command.CommandText
@@ -79,7 +73,7 @@ public class SlowQueryInterceptor : DbCommandInterceptor
     {
         if (eventData.Duration.TotalMilliseconds > SlowQueryThresholdMs)
         {
-            _logger.LogWarning(
+            logger.LogWarning(
                 "Slow SQL command detected: {ElapsedMs}ms - {Sql}",
                 eventData.Duration.TotalMilliseconds,
                 command.CommandText

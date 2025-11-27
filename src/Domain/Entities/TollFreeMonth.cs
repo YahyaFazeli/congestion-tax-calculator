@@ -1,4 +1,4 @@
-﻿using Domain.Enums;
+using Domain.Enums;
 using Domain.Base;
 
 namespace Domain.Entities;
@@ -21,5 +21,8 @@ public sealed class TollFreeMonth : Entity
         return new(NewId(), month);
     }
 
-    public bool Matches(DateTime dt) => dt.Month == (int)Month;
+    public bool Matches(DateTime dt)
+    {
+        return dt.Month == (int)Month;
+    }
 }
