@@ -1,6 +1,7 @@
 using Application.Commands.AddCityTaxRule;
 using Domain.Entities;
 using Domain.Enums;
+using Domain.Exceptions;
 using Domain.Interfaces;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
@@ -59,7 +60,7 @@ public class AddCityTaxRuleCommandHandlerTests
     }
 
     [Fact]
-    public async Task Handle_CityNotFound_ThrowsInvalidOperationException()
+    public async Task Handle_CityNotFound_ThrowsCityNotFoundException()
     {
         // Arrange
         var cityId = Guid.NewGuid();
@@ -83,13 +84,15 @@ public class AddCityTaxRuleCommandHandlerTests
         Func<Task> act = async () => await _handler.Handle(command, CancellationToken.None);
 
         // Assert
-        await act.Should()
-            .ThrowAsync<InvalidOperationException>()
-            .WithMessage($"City with ID '{cityId}' not found");
+        var exception = await act.Should()
+            .ThrowAsync<CityNotFoundException>()
+            .WithMessage($"City with ID {cityId} not found");
+
+        exception.Which.CityId.Should().Be(cityId);
     }
 
     [Fact]
-    public async Task Handle_DuplicateYear_ThrowsInvalidOperationException()
+    public async Task Handle_DuplicateYear_ThrowsValidationException()
     {
         // Arrange
         var cityId = Guid.NewGuid();
@@ -119,7 +122,7 @@ public class AddCityTaxRuleCommandHandlerTests
 
         // Assert
         await act.Should()
-            .ThrowAsync<InvalidOperationException>()
+            .ThrowAsync<ValidationException>()
             .WithMessage($"Tax rule for year {year} already exists for city 'Stockholm'");
     }
 

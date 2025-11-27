@@ -1,3 +1,4 @@
+using Domain.Exceptions;
 using Domain.Interfaces;
 using Domain.Services;
 using Domain.ValueObjects;
@@ -32,48 +33,28 @@ public sealed class CalculateTaxCommandHandler(
             MaskVehicleRegistration(request.VehicleRegistration)
         );
 
-        try
+        var rule = await taxRuleRepository.GetByCityAndYearAsync(
+            request.CityId,
+            request.Year,
+            cancellationToken
+        );
+
+        if (rule is null)
         {
-            var rule = await taxRuleRepository.GetByCityAndYearAsync(
-                request.CityId,
-                request.Year,
-                cancellationToken
-            );
-
-            if (rule is null)
-            {
-                logger.LogWarning(
-                    "No tax rule found for CityId: {CityId}, Year: {Year}",
-                    request.CityId,
-                    request.Year
-                );
-                throw new InvalidOperationException(
-                    $"No tax rule found for city {request.CityId} and year {request.Year}"
-                );
-            }
-
-            var vehicle = new Vehicle(request.VehicleRegistration, request.VehicleType);
-
-            var totalTax = taxCalculator.Calculate(rule, vehicle, request.Timestamps);
-
-            logger.LogInformation(
-                "Tax calculated successfully. CityId: {CityId}, Year: {Year}, TotalTax: {TotalTax}",
-                request.CityId,
-                request.Year,
-                totalTax.Value
-            );
-
-            return new CalculateTaxResult(totalTax.Value);
+            throw new TaxRuleNotFoundException(request.CityId, request.Year);
         }
-        catch (Exception ex) when (ex is not InvalidOperationException)
-        {
-            logger.LogError(
-                ex,
-                "Error calculating tax for CityId: {CityId}, Year: {Year}",
-                request.CityId,
-                request.Year
-            );
-            throw;
-        }
+
+        var vehicle = new Vehicle(request.VehicleRegistration, request.VehicleType);
+
+        var totalTax = taxCalculator.Calculate(rule, vehicle, request.Timestamps);
+
+        logger.LogInformation(
+            "Tax calculated successfully. CityId: {CityId}, Year: {Year}, TotalTax: {TotalTax}",
+            request.CityId,
+            request.Year,
+            totalTax.Value
+        );
+
+        return new CalculateTaxResult(totalTax.Value);
     }
 }

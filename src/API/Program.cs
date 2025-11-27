@@ -3,6 +3,7 @@ using API.Endpoints;
 using Application;
 using Infrastructure;
 using Infrastructure.Persistence;
+using Scalar.AspNetCore;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);

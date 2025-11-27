@@ -1,3 +1,4 @@
+using Domain.Exceptions;
 using Domain.Interfaces;
 using MediatR;
 using Microsoft.Extensions.Logging;
@@ -20,47 +21,50 @@ public sealed class UpdateCityCommandHandler(
             request.Name
         );
 
-        try
+        if (string.IsNullOrWhiteSpace(request.Name))
         {
-            if (string.IsNullOrWhiteSpace(request.Name))
-                throw new ArgumentException(
-                    "City name cannot be null or whitespace",
-                    nameof(request.Name)
-                );
-
-            var city = await cityRepository.GetByIdAsync(request.Id, cancellationToken);
-
-            if (city is null)
-                throw new InvalidOperationException($"City with ID '{request.Id}' not found");
-
-            var existingCity = await cityRepository.GetByNameAsync(request.Name, cancellationToken);
-
-            if (existingCity is not null && existingCity.Id != request.Id)
-                throw new InvalidOperationException(
-                    $"City with name '{request.Name}' already exists"
-                );
-
-            city.UpdateName(request.Name);
-
-            await cityRepository.UpdateAsync(city, cancellationToken);
-
-            logger.LogInformation(
-                "City updated successfully. CityId: {CityId}, Name: {CityName}",
-                city.Id,
-                city.Name
+            throw new ValidationException(
+                "City name cannot be null or whitespace",
+                new Dictionary<string, string[]>
+                {
+                    { nameof(request.Name), new[] { "City name is required" } },
+                }
             );
-
-            return new UpdateCityResult(city.Id, city.Name);
         }
-        catch (Exception ex)
+
+        var city = await cityRepository.GetByIdAsync(request.Id, cancellationToken);
+
+        if (city is null)
         {
-            logger.LogError(
-                ex,
-                "Error updating city. CityId: {CityId}, NewName: {CityName}",
-                request.Id,
-                request.Name
-            );
-            throw;
+            throw new CityNotFoundException(request.Id);
         }
+
+        var existingCity = await cityRepository.GetByNameAsync(request.Name, cancellationToken);
+
+        if (existingCity is not null && existingCity.Id != request.Id)
+        {
+            throw new ValidationException(
+                $"City with name '{request.Name}' already exists",
+                new Dictionary<string, string[]>
+                {
+                    {
+                        nameof(request.Name),
+                        new[] { $"City with name '{request.Name}' already exists" }
+                    },
+                }
+            );
+        }
+
+        city.UpdateName(request.Name);
+
+        await cityRepository.UpdateAsync(city, cancellationToken);
+
+        logger.LogInformation(
+            "City updated successfully. CityId: {CityId}, Name: {CityName}",
+            city.Id,
+            city.Name
+        );
+
+        return new UpdateCityResult(city.Id, city.Name);
     }
 }

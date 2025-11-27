@@ -1,6 +1,7 @@
 using Application.Commands.UpdateCityTaxRule;
 using Domain.Entities;
 using Domain.Enums;
+using Domain.Exceptions;
 using Domain.Interfaces;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
@@ -61,16 +62,17 @@ public class UpdateCityTaxRuleCommandHandlerTests
     }
 
     [Fact]
-    public async Task Handle_RuleNotFound_ThrowsInvalidOperationException()
+    public async Task Handle_RuleNotFound_ThrowsTaxRuleNotFoundException()
     {
         // Arrange
+        var cityId = Guid.NewGuid();
         var ruleId = Guid.NewGuid();
         _mockRepository
             .Setup(r => r.GetByIdWithAllRelationsAsync(ruleId, It.IsAny<CancellationToken>()))
             .ReturnsAsync((TaxRule?)null);
 
         var command = new UpdateCityTaxRuleCommand(
-            Guid.NewGuid(),
+            cityId,
             ruleId,
             2024,
             60m,
@@ -86,13 +88,14 @@ public class UpdateCityTaxRuleCommandHandlerTests
         Func<Task> act = async () => await _handler.Handle(command, CancellationToken.None);
 
         // Assert
-        await act.Should()
-            .ThrowAsync<InvalidOperationException>()
-            .WithMessage($"Tax rule with ID '{ruleId}' not found");
+        var exception = await act.Should().ThrowAsync<TaxRuleNotFoundException>();
+
+        exception.Which.CityId.Should().Be(cityId);
+        exception.Which.Year.Should().Be(2024);
     }
 
     [Fact]
-    public async Task Handle_WrongCityId_ThrowsInvalidOperationException()
+    public async Task Handle_WrongCityId_ThrowsValidationException()
     {
         // Arrange
         var cityId = Guid.NewGuid();
@@ -122,12 +125,12 @@ public class UpdateCityTaxRuleCommandHandlerTests
 
         // Assert
         await act.Should()
-            .ThrowAsync<InvalidOperationException>()
+            .ThrowAsync<ValidationException>()
             .WithMessage($"Tax rule '{ruleId}' does not belong to city '{wrongCityId}'");
     }
 
     [Fact]
-    public async Task Handle_ChangingYearToDuplicateYear_ThrowsInvalidOperationException()
+    public async Task Handle_ChangingYearToDuplicateYear_ThrowsValidationException()
     {
         // Arrange
         var cityId = Guid.NewGuid();
@@ -161,7 +164,7 @@ public class UpdateCityTaxRuleCommandHandlerTests
 
         // Assert
         await act.Should()
-            .ThrowAsync<InvalidOperationException>()
+            .ThrowAsync<ValidationException>()
             .WithMessage("Another tax rule for year 2025 already exists for this city");
     }
 

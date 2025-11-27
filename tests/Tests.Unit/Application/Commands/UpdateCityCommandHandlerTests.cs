@@ -1,5 +1,6 @@
 using Application.Commands.UpdateCity;
 using Domain.Entities;
+using Domain.Exceptions;
 using Domain.Interfaces;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
@@ -52,7 +53,7 @@ public class UpdateCityCommandHandlerTests
     }
 
     [Fact]
-    public async Task Handle_NullName_ThrowsArgumentException()
+    public async Task Handle_NullName_ThrowsValidationException()
     {
         // Arrange
         var command = new UpdateCityCommand(Guid.NewGuid(), null!);
@@ -62,12 +63,12 @@ public class UpdateCityCommandHandlerTests
 
         // Assert
         await act.Should()
-            .ThrowAsync<ArgumentException>()
-            .WithMessage("City name cannot be null or whitespace*");
+            .ThrowAsync<ValidationException>()
+            .WithMessage("City name cannot be null or whitespace");
     }
 
     [Fact]
-    public async Task Handle_EmptyName_ThrowsArgumentException()
+    public async Task Handle_EmptyName_ThrowsValidationException()
     {
         // Arrange
         var command = new UpdateCityCommand(Guid.NewGuid(), "");
@@ -77,12 +78,12 @@ public class UpdateCityCommandHandlerTests
 
         // Assert
         await act.Should()
-            .ThrowAsync<ArgumentException>()
-            .WithMessage("City name cannot be null or whitespace*");
+            .ThrowAsync<ValidationException>()
+            .WithMessage("City name cannot be null or whitespace");
     }
 
     [Fact]
-    public async Task Handle_WhitespaceName_ThrowsArgumentException()
+    public async Task Handle_WhitespaceName_ThrowsValidationException()
     {
         // Arrange
         var command = new UpdateCityCommand(Guid.NewGuid(), "   ");
@@ -92,12 +93,12 @@ public class UpdateCityCommandHandlerTests
 
         // Assert
         await act.Should()
-            .ThrowAsync<ArgumentException>()
-            .WithMessage("City name cannot be null or whitespace*");
+            .ThrowAsync<ValidationException>()
+            .WithMessage("City name cannot be null or whitespace");
     }
 
     [Fact]
-    public async Task Handle_CityNotFound_ThrowsInvalidOperationException()
+    public async Task Handle_CityNotFound_ThrowsCityNotFoundException()
     {
         // Arrange
         var cityId = Guid.NewGuid();
@@ -111,13 +112,15 @@ public class UpdateCityCommandHandlerTests
         Func<Task> act = async () => await _handler.Handle(command, CancellationToken.None);
 
         // Assert
-        await act.Should()
-            .ThrowAsync<InvalidOperationException>()
-            .WithMessage($"City with ID '{cityId}' not found");
+        var exception = await act.Should()
+            .ThrowAsync<CityNotFoundException>()
+            .WithMessage($"City with ID {cityId} not found");
+
+        exception.Which.CityId.Should().Be(cityId);
     }
 
     [Fact]
-    public async Task Handle_DuplicateCityName_ThrowsInvalidOperationException()
+    public async Task Handle_DuplicateCityName_ThrowsValidationException()
     {
         // Arrange
         var cityId = Guid.NewGuid();
@@ -140,7 +143,7 @@ public class UpdateCityCommandHandlerTests
 
         // Assert
         await act.Should()
-            .ThrowAsync<InvalidOperationException>()
+            .ThrowAsync<ValidationException>()
             .WithMessage($"City with name '{newName}' already exists");
     }
 

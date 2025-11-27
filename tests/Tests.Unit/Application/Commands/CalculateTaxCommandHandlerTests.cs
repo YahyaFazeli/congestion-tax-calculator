@@ -1,6 +1,7 @@
 using Application.Commands.CalculateTax;
 using Domain.Entities;
 using Domain.Enums;
+using Domain.Exceptions;
 using Domain.Interfaces;
 using Domain.Services;
 using Domain.ValueObjects;
@@ -69,7 +70,7 @@ public class CalculateTaxCommandHandlerTests
     }
 
     [Fact]
-    public async Task Handle_CityNotFound_ThrowsInvalidOperationException()
+    public async Task Handle_CityNotFound_ThrowsTaxRuleNotFoundException()
     {
         // Arrange
         var cityId = Guid.NewGuid();
@@ -91,13 +92,16 @@ public class CalculateTaxCommandHandlerTests
         Func<Task> act = async () => await _handler.Handle(command, CancellationToken.None);
 
         // Assert
-        await act.Should()
-            .ThrowAsync<InvalidOperationException>()
+        var exception = await act.Should()
+            .ThrowAsync<TaxRuleNotFoundException>()
             .WithMessage($"No tax rule found for city {cityId} and year {year}");
+
+        exception.Which.CityId.Should().Be(cityId);
+        exception.Which.Year.Should().Be(year);
     }
 
     [Fact]
-    public async Task Handle_YearNotFound_ThrowsInvalidOperationException()
+    public async Task Handle_YearNotFound_ThrowsTaxRuleNotFoundException()
     {
         // Arrange
         var cityId = Guid.NewGuid();
@@ -119,7 +123,7 @@ public class CalculateTaxCommandHandlerTests
         Func<Task> act = async () => await _handler.Handle(command, CancellationToken.None);
 
         // Assert
-        await act.Should().ThrowAsync<InvalidOperationException>();
+        await act.Should().ThrowAsync<TaxRuleNotFoundException>();
     }
 
     [Fact]
@@ -365,7 +369,7 @@ public class CalculateTaxCommandHandlerTests
     }
 
     [Fact]
-    public async Task Handle_LogsWarning_WhenRuleNotFound()
+    public async Task Handle_DoesNotLogWarning_WhenRuleNotFound()
     {
         // Arrange
         var cityId = Guid.NewGuid();
@@ -388,12 +392,12 @@ public class CalculateTaxCommandHandlerTests
         {
             await _handler.Handle(command, CancellationToken.None);
         }
-        catch (InvalidOperationException)
+        catch (TaxRuleNotFoundException)
         {
-            // Expected exception
+            // Expected exception - now handled by global handler
         }
 
-        // Assert
+        // Assert - The warning is now logged by the global exception handler, not here
         _mockLogger.Verify(
             x =>
                 x.Log(
@@ -403,7 +407,7 @@ public class CalculateTaxCommandHandlerTests
                     It.IsAny<Exception>(),
                     It.IsAny<Func<It.IsAnyType, Exception?, string>>()
                 ),
-            Times.Once
+            Times.Never
         );
     }
 
