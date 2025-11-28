@@ -84,35 +84,4 @@ public class CityRepository(CongestionTaxDbContext context, ILogger<CityReposito
 
         return result;
     }
-
-    public async Task<TaxRule> AddTaxRuleAsync(
-        TaxRule taxRule,
-        CancellationToken cancellationToken = default
-    )
-    {
-        logger.LogDebug(
-            "Adding tax rule. RuleId: {RuleId}, CityId: {CityId}",
-            taxRule.Id,
-            taxRule.CityId
-        );
-
-        try
-        {
-            await _context.TaxRules.AddAsync(taxRule, cancellationToken);
-
-            logger.LogDebug("Add tax rule operation completed");
-
-            return taxRule;
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(
-                ex,
-                "Error adding tax rule. RuleId: {RuleId}, CityId: {CityId}",
-                taxRule.Id,
-                taxRule.CityId
-            );
-            throw;
-        }
-    }
 }

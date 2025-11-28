@@ -11,5 +11,4 @@ public interface ICityRepository : IRepository<City>
         Guid ruleId,
         CancellationToken cancellationToken = default
     );
-    Task<TaxRule> AddTaxRuleAsync(TaxRule taxRule, CancellationToken cancellationToken = default);
 }

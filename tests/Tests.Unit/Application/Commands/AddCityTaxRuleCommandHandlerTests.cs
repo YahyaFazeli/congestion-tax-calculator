@@ -62,10 +62,8 @@ public class AddCityTaxRuleCommandHandlerTests
         result.Value.CityId.Should().Be(cityId);
         result.Value.Year.Should().Be(year);
         result.Value.RuleId.Should().NotBeEmpty();
-        _mockRepository.Verify(
-            r => r.AddTaxRuleAsync(It.IsAny<TaxRule>(), It.IsAny<CancellationToken>()),
-            Times.Once
-        );
+        city.TaxRules.Should().HaveCount(1);
+        city.TaxRules.First().Year.Should().Be(year);
     }
 
     [Fact]
@@ -170,10 +168,7 @@ public class AddCityTaxRuleCommandHandlerTests
 
         // Assert
         result.Should().NotBeNull();
-        _mockRepository.Verify(
-            r => r.AddTaxRuleAsync(It.IsAny<TaxRule>(), It.IsAny<CancellationToken>()),
-            Times.Once
-        );
+        city.TaxRules.Should().HaveCount(1);
     }
 
     [Fact]
@@ -205,9 +200,6 @@ public class AddCityTaxRuleCommandHandlerTests
 
         // Assert
         _mockRepository.Verify(r => r.GetByIdWithRulesAsync(cityId, cancellationToken), Times.Once);
-        _mockRepository.Verify(
-            r => r.AddTaxRuleAsync(It.IsAny<TaxRule>(), cancellationToken),
-            Times.Once
-        );
+        city.TaxRules.Should().HaveCount(1);
     }
 }

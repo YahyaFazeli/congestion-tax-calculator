@@ -247,35 +247,6 @@ public class CityRepositoryTests : IDisposable
     }
 
     [Fact]
-    public async Task AddTaxRuleAsync_ValidRule_PersistsToDatabase()
-    {
-        // Arrange
-        await using var context = _fixture.CreateContext();
-        var repository = new CityRepository(context, NullLogger<CityRepository>.Instance);
-        var city = TestDataBuilder.CreateTestCity("Stockholm");
-        await repository.AddAsync(city);
-        await context.SaveChangesAsync();
-
-        var taxRule = TestDataBuilder.CreateTestRule(city.Id, 2024);
-
-        // Act
-        var result = await repository.AddTaxRuleAsync(taxRule);
-        await context.SaveChangesAsync();
-
-        // Assert
-        result.Should().NotBeNull();
-        result.Id.Should().Be(taxRule.Id);
-        result.Year.Should().Be(2024);
-
-        // Verify it's in database
-        context.ChangeTracker.Clear();
-        var retrieved = await repository.GetByIdWithRulesAsync(city.Id);
-        retrieved.Should().NotBeNull();
-        retrieved!.TaxRules.Should().HaveCount(1);
-        retrieved.TaxRules.First().Year.Should().Be(2024);
-    }
-
-    [Fact]
     public async Task UpdateAsync_ExistingCity_UpdatesInDatabase()
     {
         // Arrange

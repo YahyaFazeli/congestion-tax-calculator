@@ -70,7 +70,7 @@ public sealed class AddCityTaxRuleCommandHandler(
             freeVehicles
         );
 
-        await cityRepository.AddTaxRuleAsync(taxRule, cancellationToken);
+        city.AddRule(taxRule);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
         logger.LogInformation(
