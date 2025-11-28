@@ -5,6 +5,8 @@ using Application.Commands.UpdateCity;
 using Application.Commands.UpdateCityTaxRule;
 using Application.Queries.GetAllCities;
 using Application.Queries.GetCityTaxRules;
+using Asp.Versioning;
+using Asp.Versioning.Builder;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
@@ -14,7 +16,15 @@ public static class CityEndpoints
 {
     public static void MapCityEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/api/cities").WithTags("Cities").WithOpenApi();
+        var versionSet = app.NewApiVersionSet()
+            .HasApiVersion(new ApiVersion(1, 0))
+            .ReportApiVersions()
+            .Build();
+
+        var group = app.MapGroup("/api/v{version:apiVersion}/cities")
+            .WithApiVersionSet(versionSet)
+            .WithTags("Cities")
+            .WithOpenApi();
 
         group
             .MapGet("", GetAllCities)
@@ -82,7 +92,7 @@ public static class CityEndpoints
         var result = await sender.Send(command, cancellationToken);
 
         return result.IsSuccess
-            ? Results.Created($"/api/cities/{result.Value.Id}", result.Value)
+            ? Results.Created($"/api/v1/cities/{result.Value.Id}", result.Value)
             : Results.BadRequest(new { result.Error.Code, result.Error.Message });
     }
 
@@ -141,7 +151,10 @@ public static class CityEndpoints
                 : Results.BadRequest(new { result.Error.Code, result.Error.Message });
         }
 
-        return Results.Created($"/api/cities/{cityId}/rules/{result.Value.RuleId}", result.Value);
+        return Results.Created(
+            $"/api/v1/cities/{cityId}/rules/{result.Value.RuleId}",
+            result.Value
+        );
     }
 
     private static async Task<IResult> GetCityTaxRules(

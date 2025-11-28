@@ -1,5 +1,6 @@
 using System.Threading.RateLimiting;
 using API.Middleware;
+using Asp.Versioning;
 using Serilog;
 
 namespace API;
@@ -9,6 +10,21 @@ public static class DependencyInjection
     public static IServiceCollection AddApiServices(this IServiceCollection services)
     {
         services.AddOpenApi();
+
+        // Add API versioning
+        services
+            .AddApiVersioning(options =>
+            {
+                options.DefaultApiVersion = new ApiVersion(1, 0);
+                options.AssumeDefaultVersionWhenUnspecified = true;
+                options.ReportApiVersions = true;
+                options.ApiVersionReader = new UrlSegmentApiVersionReader();
+            })
+            .AddApiExplorer(options =>
+            {
+                options.GroupNameFormat = "'v'V";
+                options.SubstituteApiVersionInUrl = true;
+            });
 
         // Add rate limiting
         services.AddRateLimiter(options =>

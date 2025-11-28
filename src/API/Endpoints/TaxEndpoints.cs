@@ -1,5 +1,7 @@
 using API.ViewModels;
 using Application.Commands.CalculateTax;
+using Asp.Versioning;
+using Asp.Versioning.Builder;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
@@ -9,7 +11,15 @@ public static class TaxEndpoints
 {
     public static void MapTaxEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/api/tax").WithTags("Tax Calculation").WithOpenApi();
+        var versionSet = app.NewApiVersionSet()
+            .HasApiVersion(new ApiVersion(1, 0))
+            .ReportApiVersions()
+            .Build();
+
+        var group = app.MapGroup("/api/v{version:apiVersion}/tax")
+            .WithApiVersionSet(versionSet)
+            .WithTags("Tax Calculation")
+            .WithOpenApi();
 
         group
             .MapPost("/calculate", CalculateTax)
