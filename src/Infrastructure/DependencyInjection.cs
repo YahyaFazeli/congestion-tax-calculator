@@ -54,9 +54,27 @@ public static class DependencyInjection
         // Register Unit of Work
         services.AddScoped<IUnitOfWork, UnitOfWork>();
 
-        // Register repositories
-        services.AddScoped<ICityRepository, CityRepository>();
-        services.AddScoped<ITaxRuleRepository, TaxRuleRepository>();
+        // Register base repositories (non-cached)
+        services.AddScoped<CityRepository>();
+        services.AddScoped<TaxRuleRepository>();
+
+        // Register cached repositories
+        services.AddScoped<ICityRepository>(sp =>
+        {
+            var innerRepo = sp.GetRequiredService<CityRepository>();
+            var cache = sp.GetRequiredService<IMemoryCache>();
+            var logger = sp.GetRequiredService<ILogger<CachedCityRepository>>();
+            return new CachedCityRepository(innerRepo, cache, logger);
+        });
+
+        services.AddScoped<ITaxRuleRepository>(sp =>
+        {
+            var innerRepo = sp.GetRequiredService<TaxRuleRepository>();
+            var cache = sp.GetRequiredService<IMemoryCache>();
+            var logger = sp.GetRequiredService<ILogger<CachedTaxRuleRepository>>();
+            return new CachedTaxRuleRepository(innerRepo, cache, logger);
+        });
+
         services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 
         return services;
