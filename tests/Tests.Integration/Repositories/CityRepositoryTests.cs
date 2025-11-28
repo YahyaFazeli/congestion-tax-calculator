@@ -25,7 +25,7 @@ public class CityRepositoryTests : IDisposable
 
         // Act
         var result = await repository.AddAsync(city);
-        await repository.SaveChangesAsync();
+        await context.SaveChangesAsync();
 
         // Assert
         result.Should().NotBeNull();
@@ -46,7 +46,7 @@ public class CityRepositoryTests : IDisposable
         var repository = new CityRepository(context, NullLogger<CityRepository>.Instance);
         var city = TestDataBuilder.CreateTestCity("Stockholm");
         await repository.AddAsync(city);
-        await repository.SaveChangesAsync();
+        await context.SaveChangesAsync();
 
         // Act
         var result = await repository.GetByIdAsync(city.Id);
@@ -82,7 +82,7 @@ public class CityRepositoryTests : IDisposable
         var city2 = TestDataBuilder.CreateCityWithRules("Stockholm", 2014);
         await repository.AddAsync(city1);
         await repository.AddAsync(city2);
-        await repository.SaveChangesAsync();
+        await context.SaveChangesAsync();
 
         // Act
         var result = await repository.GetAllAsync();
@@ -105,7 +105,7 @@ public class CityRepositoryTests : IDisposable
         var repository = new CityRepository(context, NullLogger<CityRepository>.Instance);
         var city = TestDataBuilder.CreateTestCity("Malmö");
         await repository.AddAsync(city);
-        await repository.SaveChangesAsync();
+        await context.SaveChangesAsync();
 
         // Act
         var result = await repository.GetByNameAsync("Malmö");
@@ -137,7 +137,7 @@ public class CityRepositoryTests : IDisposable
         var repository = new CityRepository(context, NullLogger<CityRepository>.Instance);
         var city = TestDataBuilder.CreateCityWithRules("Gothenburg", 2013, 2014);
         await repository.AddAsync(city);
-        await repository.SaveChangesAsync();
+        await context.SaveChangesAsync();
 
         // Act
         var result = await repository.GetByIdWithRulesAsync(city.Id);
@@ -157,7 +157,7 @@ public class CityRepositoryTests : IDisposable
         var repository = new CityRepository(context, NullLogger<CityRepository>.Instance);
         var city = TestDataBuilder.CreateCityWithRules("Gothenburg", 2013);
         await repository.AddAsync(city);
-        await repository.SaveChangesAsync();
+        await context.SaveChangesAsync();
         var ruleId = city.TaxRules.First().Id;
 
         // Act
@@ -185,7 +185,7 @@ public class CityRepositoryTests : IDisposable
 
         // Act
         await repository.AddAsync(city);
-        await repository.SaveChangesAsync();
+        await context.SaveChangesAsync();
 
         // Assert
         context.ChangeTracker.Clear();
@@ -204,11 +204,11 @@ public class CityRepositoryTests : IDisposable
         var repository = new CityRepository(context, NullLogger<CityRepository>.Instance);
         var city = TestDataBuilder.CreateTestCity("ToDelete");
         await repository.AddAsync(city);
-        await repository.SaveChangesAsync();
+        await context.SaveChangesAsync();
 
         // Act
         await repository.DeleteAsync(city.Id);
-        await repository.SaveChangesAsync();
+        await context.SaveChangesAsync();
 
         // Assert
         var retrieved = await repository.GetByIdAsync(city.Id);
@@ -223,7 +223,7 @@ public class CityRepositoryTests : IDisposable
         var repository = new CityRepository(context, NullLogger<CityRepository>.Instance);
         var city = TestDataBuilder.CreateTestCity("Exists");
         await repository.AddAsync(city);
-        await repository.SaveChangesAsync();
+        await context.SaveChangesAsync();
 
         // Act
         var result = await repository.ExistsAsync(city.Id);
@@ -254,13 +254,13 @@ public class CityRepositoryTests : IDisposable
         var repository = new CityRepository(context, NullLogger<CityRepository>.Instance);
         var city = TestDataBuilder.CreateTestCity("Stockholm");
         await repository.AddAsync(city);
-        await repository.SaveChangesAsync();
+        await context.SaveChangesAsync();
 
         var taxRule = TestDataBuilder.CreateTestRule(city.Id, 2024);
 
         // Act
         var result = await repository.AddTaxRuleAsync(taxRule);
-        await repository.SaveChangesAsync();
+        await context.SaveChangesAsync();
 
         // Assert
         result.Should().NotBeNull();
@@ -283,12 +283,12 @@ public class CityRepositoryTests : IDisposable
         var repository = new CityRepository(context, NullLogger<CityRepository>.Instance);
         var city = TestDataBuilder.CreateTestCity("OldName");
         await repository.AddAsync(city);
-        await repository.SaveChangesAsync();
+        await context.SaveChangesAsync();
 
         // Act
         city.UpdateName("NewName");
         await repository.UpdateAsync(city);
-        await repository.SaveChangesAsync();
+        await context.SaveChangesAsync();
 
         // Assert
         context.ChangeTracker.Clear();

@@ -11,14 +11,20 @@ namespace Tests.Unit.Application.Commands;
 public class CreateCityCommandHandlerTests
 {
     private readonly Mock<ICityRepository> _mockRepository;
+    private readonly Mock<IUnitOfWork> _mockUnitOfWork;
     private readonly Mock<ILogger<CreateCityCommandHandler>> _mockLogger;
     private readonly CreateCityCommandHandler _handler;
 
     public CreateCityCommandHandlerTests()
     {
         _mockRepository = new Mock<ICityRepository>();
+        _mockUnitOfWork = new Mock<IUnitOfWork>();
         _mockLogger = new Mock<ILogger<CreateCityCommandHandler>>();
-        _handler = new CreateCityCommandHandler(_mockRepository.Object, _mockLogger.Object);
+        _handler = new CreateCityCommandHandler(
+            _mockRepository.Object,
+            _mockUnitOfWork.Object,
+            _mockLogger.Object
+        );
     }
 
     [Fact]

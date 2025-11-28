@@ -10,6 +10,7 @@ namespace Application.Commands.UpdateCityTaxRule;
 
 public sealed class UpdateCityTaxRuleCommandHandler(
     ITaxRuleRepository taxRuleRepository,
+    IUnitOfWork unitOfWork,
     ILogger<UpdateCityTaxRuleCommandHandler> logger
 ) : IRequestHandler<UpdateCityTaxRuleCommand, Result<UpdateCityTaxRuleResult>>
 {
@@ -104,7 +105,7 @@ public sealed class UpdateCityTaxRuleCommandHandler(
         );
 
         await taxRuleRepository.ReplaceRuleAsync(request.RuleId, updatedRule, cancellationToken);
-        await taxRuleRepository.SaveChangesAsync(cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         logger.LogInformation(
             "Tax rule updated successfully. RuleId: {RuleId}, CityId: {CityId}, Year: {Year}",

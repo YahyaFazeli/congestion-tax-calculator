@@ -8,6 +8,7 @@ namespace Application.Commands.UpdateCity;
 
 public sealed class UpdateCityCommandHandler(
     ICityRepository cityRepository,
+    IUnitOfWork unitOfWork,
     ILogger<UpdateCityCommandHandler> logger
 ) : IRequestHandler<UpdateCityCommand, Result<UpdateCityResult>>
 {
@@ -45,7 +46,7 @@ public sealed class UpdateCityCommandHandler(
         city.UpdateName(request.Name);
 
         await cityRepository.UpdateAsync(city, cancellationToken);
-        await cityRepository.SaveChangesAsync(cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         logger.LogInformation(
             "City updated successfully. CityId: {CityId}, Name: {CityName}",

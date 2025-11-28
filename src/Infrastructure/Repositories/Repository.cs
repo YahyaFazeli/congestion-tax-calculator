@@ -53,9 +53,4 @@ public class Repository<T>(CongestionTaxDbContext context) : IRepository<T>
     {
         return await _dbSet.AnyAsync(e => e.Id == id, cancellationToken);
     }
-
-    public virtual async Task SaveChangesAsync(CancellationToken cancellationToken = default)
-    {
-        await _context.SaveChangesAsync(cancellationToken);
-    }
 }

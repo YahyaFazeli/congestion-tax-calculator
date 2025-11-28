@@ -8,6 +8,7 @@ namespace Application.Commands.CreateCity;
 
 public sealed class CreateCityCommandHandler(
     ICityRepository cityRepository,
+    IUnitOfWork unitOfWork,
     ILogger<CreateCityCommandHandler> logger
 ) : IRequestHandler<CreateCityCommand, Result<CreateCityResult>>
 {
@@ -29,7 +30,7 @@ public sealed class CreateCityCommandHandler(
         var city = City.Create(request.Name);
 
         await cityRepository.AddAsync(city, cancellationToken);
-        await cityRepository.SaveChangesAsync(cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         logger.LogInformation(
             "City created successfully. CityId: {CityId}, Name: {CityName}",

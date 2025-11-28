@@ -10,6 +10,7 @@ namespace Application.Commands.AddCityTaxRule;
 
 public sealed class AddCityTaxRuleCommandHandler(
     ICityRepository cityRepository,
+    IUnitOfWork unitOfWork,
     ILogger<AddCityTaxRuleCommandHandler> logger
 ) : IRequestHandler<AddCityTaxRuleCommand, Result<AddCityTaxRuleResult>>
 {
@@ -70,7 +71,7 @@ public sealed class AddCityTaxRuleCommandHandler(
         );
 
         await cityRepository.AddTaxRuleAsync(taxRule, cancellationToken);
-        await cityRepository.SaveChangesAsync(cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
         logger.LogInformation(
             "Tax rule added successfully. RuleId: {RuleId}, CityId: {CityId}, Year: {Year}",

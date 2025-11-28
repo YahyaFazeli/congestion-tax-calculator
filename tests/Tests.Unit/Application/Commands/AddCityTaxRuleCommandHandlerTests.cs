@@ -14,14 +14,20 @@ namespace Tests.Unit.Application.Commands;
 public class AddCityTaxRuleCommandHandlerTests
 {
     private readonly Mock<ICityRepository> _mockRepository;
+    private readonly Mock<IUnitOfWork> _mockUnitOfWork;
     private readonly Mock<ILogger<AddCityTaxRuleCommandHandler>> _mockLogger;
     private readonly AddCityTaxRuleCommandHandler _handler;
 
     public AddCityTaxRuleCommandHandlerTests()
     {
         _mockRepository = new Mock<ICityRepository>();
+        _mockUnitOfWork = new Mock<IUnitOfWork>();
         _mockLogger = new Mock<ILogger<AddCityTaxRuleCommandHandler>>();
-        _handler = new AddCityTaxRuleCommandHandler(_mockRepository.Object, _mockLogger.Object);
+        _handler = new AddCityTaxRuleCommandHandler(
+            _mockRepository.Object,
+            _mockUnitOfWork.Object,
+            _mockLogger.Object
+        );
     }
 
     [Fact]

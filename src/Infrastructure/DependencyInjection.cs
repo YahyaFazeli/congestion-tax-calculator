@@ -51,6 +51,9 @@ public static class DependencyInjection
         // Register memory cache
         services.AddMemoryCache();
 
+        // Register Unit of Work
+        services.AddScoped<IUnitOfWork, UnitOfWork>();
+
         // Register repositories
         services.AddScoped<ICityRepository, CityRepository>();
         services.AddScoped<ITaxRuleRepository, TaxRuleRepository>();
