@@ -1,3 +1,4 @@
+using System.Threading.RateLimiting;
 using API.Middleware;
 using Serilog;
 
@@ -8,6 +9,29 @@ public static class DependencyInjection
     public static IServiceCollection AddApiServices(this IServiceCollection services)
     {
         services.AddOpenApi();
+
+        // Add rate limiting
+        services.AddRateLimiter(options =>
+        {
+            // Global rate limiter - 100 requests per minute per IP
+            options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
+            {
+                var ipAddress = context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+
+                return RateLimitPartition.GetFixedWindowLimiter(
+                    partitionKey: ipAddress,
+                    factory: _ => new FixedWindowRateLimiterOptions
+                    {
+                        PermitLimit = 100,
+                        Window = TimeSpan.FromMinutes(1),
+                        QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                        QueueLimit = 0,
+                    }
+                );
+            });
+
+            options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+        });
 
         return services;
     }
@@ -31,6 +55,9 @@ public static class DependencyInjection
 
     public static WebApplication ConfigureMiddleware(this WebApplication app)
     {
+        // Add rate limiting middleware
+        app.UseRateLimiter();
+
         // Add global exception handling
         app.UseMiddleware<ExceptionHandlingMiddleware>();
 
