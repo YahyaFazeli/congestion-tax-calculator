@@ -1,19 +1,10 @@
-﻿namespace Domain.Specifications;
+namespace Domain.Specifications;
 
 public static class SingleChargeSpecification
 {
     public static IEnumerable<List<DateTime>> GroupByChargeWindow(
         IEnumerable<DateTime> timestamps,
         int windowMinutes
-    )
-    {
-        var specification = new SingleChargeWindowSpecification(windowMinutes);
-        return GroupBySpecification(timestamps, specification);
-    }
-
-    public static IEnumerable<List<DateTime>> GroupBySpecification(
-        IEnumerable<DateTime> timestamps,
-        ISpecification<(DateTime first, DateTime second)> specification
     )
     {
         var ordered = timestamps.OrderBy(t => t).ToList();
@@ -26,7 +17,7 @@ public static class SingleChargeSpecification
         {
             var windowStart = currentGroup[0];
 
-            if (specification.IsSatisfiedBy((windowStart, ordered[i])))
+            if ((ordered[i] - windowStart).TotalMinutes <= windowMinutes)
             {
                 currentGroup.Add(ordered[i]);
             }

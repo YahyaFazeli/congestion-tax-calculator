@@ -1,4 +1,4 @@
-﻿using Domain.Base;
+using Domain.Base;
 using Domain.ValueObjects;
 
 namespace Domain.Entities;
@@ -39,6 +39,6 @@ public sealed class TollInterval : Entity
     public bool IsWithin(DateTime dt)
     {
         var t = TimeOnly.FromDateTime(dt);
-        return t >= Start && t < End;
+        return t >= Start && t <= End;
     }
 }

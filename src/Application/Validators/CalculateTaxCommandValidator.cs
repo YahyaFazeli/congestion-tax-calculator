@@ -15,14 +15,6 @@ public class CalculateTaxCommandValidator : AbstractValidator<CalculateTaxComman
             .InclusiveBetween(2000, 2100)
             .WithMessage("Year must be between 2000 and 2100");
 
-        RuleFor(x => x.VehicleRegistration)
-            .NotEmpty()
-            .WithMessage("VehicleRegistration is required")
-            .MaximumLength(20)
-            .WithMessage("VehicleRegistration must not exceed 20 characters")
-            .Matches("^[A-Z0-9]+$")
-            .WithMessage("VehicleRegistration must contain only uppercase letters and numbers");
-
         RuleFor(x => x.Timestamps)
             .NotEmpty()
             .WithMessage("Timestamps are required")

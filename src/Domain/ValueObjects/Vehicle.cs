@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using Domain.Enums;
 
 namespace Domain.ValueObjects;
@@ -7,10 +8,15 @@ public readonly struct Vehicle
     public string Registration { get; }
     public VehicleType Type { get; }
 
+    private static readonly Regex RegistrationPattern = new("^[A-Z0-9]+$");
+
     public Vehicle(string registration, VehicleType type)
     {
         if (string.IsNullOrWhiteSpace(registration))
             throw new ArgumentException("Registration cannot be empty.", nameof(registration));
+
+        if (!RegistrationPattern.IsMatch(registration))
+            throw new ArgumentException("Invalid registration format.");
 
         Registration = registration;
         Type = type;
