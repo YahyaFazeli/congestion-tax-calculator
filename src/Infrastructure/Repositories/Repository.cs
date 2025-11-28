@@ -1,4 +1,5 @@
 using Domain.Base;
+using Domain.Common;
 using Domain.Interfaces;
 using Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -24,6 +25,21 @@ public class Repository<T>(CongestionTaxDbContext context) : IRepository<T>
     )
     {
         return await _dbSet.ToListAsync(cancellationToken);
+    }
+
+    public virtual async Task<PagedResult<T>> GetPagedAsync(
+        int page,
+        int pageSize,
+        CancellationToken cancellationToken = default
+    )
+    {
+        var totalCount = await _dbSet.CountAsync(cancellationToken);
+        var items = await _dbSet
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(cancellationToken);
+
+        return new PagedResult<T>(items, totalCount, page, pageSize);
     }
 
     public virtual async Task<T> AddAsync(T entity, CancellationToken cancellationToken = default)
